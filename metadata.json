@@ -1,0 +1,6 @@
+{
+  "name": "TrueJobPost Web App MVP",
+  "description": "Zero-trust job post scoring engine with AI-extracted features and deterministic Human-in-the-Loop review to prevent hiring scams.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
