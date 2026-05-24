@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Routes, Route, Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Shield, 
@@ -21,15 +22,22 @@ import {
   Mail,
   UserCheck,
   Award,
-  Link as LinkIcon
+  Link as LinkIcon,
+  PlayCircle,
+  Briefcase
 } from "lucide-react";
 import { JobAnalysisData, GroundingSource, ScoreReport } from "./types";
 import { computeTrustScore } from "./utils/scoring";
 import { testCases, TestCase } from "./data/testCases";
+import Tutorial from "./pages/Tutorial";
+import SettingsPage from "./pages/Settings";
+import RealUseCases from "./pages/RealUseCases";
 
 export default function App() {
+  const location = useLocation();
+  const currentPath = location.pathname;
+
   // --- States ---
-  const [activeTab, setActiveTab] = useState<"workspace" | "settings">("workspace");
   const [currentStep, setCurrentStep] = useState<1 | 3 | 4>(1); // Step 1 (Input), Step 3 (Review), Step 4 (Result)
   
   // Custom Key Configuration
@@ -75,7 +83,6 @@ export default function App() {
     evidenceNotes: "",
     scamIndicators: []
   });
-  const [selectedPresetId, setSelectedPresetId] = useState<string>("");
   const [groundingSources, setGroundingSources] = useState<GroundingSource[]>([]);
 
   // Scoring output results (Step 4)
@@ -258,7 +265,6 @@ export default function App() {
     setScoreReport(null);
     setGroundingSources([]);
     setAnalysisError(null);
-    setSelectedPresetId("");
     setCurrentStep(1);
   }
 
@@ -267,7 +273,6 @@ export default function App() {
     const preset = testCases.find(c => c.id === presetId);
     if (!preset) return;
 
-    setSelectedPresetId(preset.id);
     setCompanyName(preset.company);
     setJobDescription(preset.description);
 
@@ -279,7 +284,11 @@ export default function App() {
         { title: "Opencorporates Legal Business Registrar", uri: "https://opencorporates.com" }
       ]);
       setCurrentStep(3); // Push straight to human-in-the-loop review dashboard
+    } else {
+      setCurrentStep(1);
     }
+    
+    navigate("/");
   }
 
   const isConfigValid = validationSuccess === true || (isEnvKeyAvailable && !useCustomKey);
@@ -300,31 +309,38 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 bg-zinc-100 p-1 rounded-lg self-start sm:self-center" role="tablist" id="navigation-tabs">
-            <button 
-              id="tab-workspace-trigger"
-              onClick={() => setActiveTab("workspace")}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-150 ${activeTab === "workspace" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-600 hover:text-zinc-900"}`}
-              role="tab"
-              aria-selected={activeTab === "workspace"}
-              aria-controls="workspace-tab-panel"
+          <div className="flex flex-wrap items-center gap-2 bg-zinc-100 p-1 rounded-lg self-start sm:self-center" role="navigation" id="navigation-tabs">
+            <Link 
+              to="/"
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-150 flex items-center gap-1.5 ${currentPath === "/" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-600 hover:text-zinc-900"}`}
             >
+              <Briefcase className="w-4 h-4" />
               Workspace
-            </button>
-            <button 
-              id="tab-settings-trigger"
-              onClick={() => setActiveTab("settings")}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-150 flex items-center gap-1.5 ${activeTab === "settings" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-600 hover:text-zinc-900"}`}
-              role="tab"
-              aria-selected={activeTab === "settings"}
-              aria-controls="settings-tab-panel"
+            </Link>
+            <Link 
+              to="/tutorial"
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-150 flex items-center gap-1.5 ${currentPath === "/tutorial" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-600 hover:text-zinc-900"}`}
+            >
+              <PlayCircle className="w-4 h-4" />
+              Tutorial
+            </Link>
+            <Link 
+              to="/cases"
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-150 flex items-center gap-1.5 ${currentPath === "/cases" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-600 hover:text-zinc-900"}`}
+            >
+              <ShieldCheck className="w-4 h-4" />
+              Real Use Cases
+            </Link>
+            <Link 
+              to="/settings"
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-150 flex items-center gap-1.5 ${currentPath === "/settings" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-600 hover:text-zinc-900"}`}
             >
               <Settings className="w-4 h-4" />
               Settings
               {!isConfigValid && (
                 <span className="w-2 h-2 bg-amber-500 rounded-full animate-ping" id="config-alert-ping" />
               )}
-            </button>
+            </Link>
           </div>
         </div>
       </header>
@@ -333,7 +349,7 @@ export default function App() {
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-8" id="primary-layout">
         
         {/* Active Key Status Info Alert (When missing configuration) */}
-        {!isConfigValid && activeTab !== "settings" && (
+        {!isConfigValid && currentPath !== "/settings" && (
           <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-2xs" id="alert-no-key">
             <div className="flex gap-3">
               <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5 md:mt-0" />
@@ -342,30 +358,25 @@ export default function App() {
                 <p className="text-xs text-amber-800 mt-0.5">Please validate your Google Gemini API configuration keys in settings before launching automated research tasks.</p>
               </div>
             </div>
-            <button
-              id="goto-settings-btn"
-              onClick={() => setActiveTab("settings")}
-              className="text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg transition-colors cursor-pointer shrink-0"
+            <Link
+              to="/settings"
+              className="text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg transition-colors cursor-pointer shrink-0 inline-block"
             >
               Configure Configuration Now
-            </button>
+            </Link>
           </div>
         )}
 
-        <AnimatePresence mode="wait">
-          
-          {/* Workspace Tab Content */}
-          {activeTab === "workspace" && (
+        <Routes>
+          <Route path="/" element={
             <motion.div
               key="workspace"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              id="workspace-tab-panel"
-              role="tabpanel"
-              aria-labelledby="tab-workspace-trigger"
             >
+
               
               {/* Stepper Steps UI Process Visual */}
               <div className="mb-8 bg-white border border-zinc-200 rounded-xl p-5 shadow-2xs" id="visual-process-stepper">
@@ -463,94 +474,7 @@ export default function App() {
                     {/* Right input form card */}
                     <div className="lg:col-span-2 bg-white border border-zinc-200 rounded-xl p-6 shadow-2xs" id="input-form-card">
                       <h2 className="text-zinc-950 font-bold text-xl mb-2" id="form-heading">Analyze New Job Listing</h2>
-                      <p className="text-xs text-zinc-500 mb-5">Analyze a custom job listing using our live Zero-Trust AI crawler, or choose one of our 10 curated test cases to run an instant sandbox computation.</p>
-
-                      {/* curate 10 presets test widget */}
-                      <div className="bg-zinc-55 border border-zinc-200 rounded-xl p-4 mb-6 bg-zinc-50" id="preset-selector-box">
-                        <div className="flex items-center gap-2 mb-2" id="preset-header">
-                          <Sliders className="w-4 h-4 text-indigo-600" />
-                          <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-widest">Select Preset Sandbox Test Case</h3>
-                        </div>
-                        
-                        <p className="text-[11px] text-zinc-600 mb-3 leading-relaxed">
-                          Test our scoring matrix immediately across 10 realistic corporate templates, ranging from verified Fortune 500 portals to dangerous advance-fee check traps.
-                        </p>
-
-                        <div className="relative" id="preset-dropdown-container">
-                          <label htmlFor="preset-test-select" className="sr-only">Choose a sandbox test listing template</label>
-                          <select
-                            id="preset-test-select"
-                            value={selectedPresetId}
-                            onChange={(e) => loadPresetToForm(e.target.value, false)}
-                            className="w-full p-2.5 bg-white border border-zinc-300 text-zinc-900 font-semibold rounded-lg text-sm focus:ring-2 focus:ring-indigo-600 focus:outline-none cursor-pointer appearance-none"
-                          >
-                            <option value="" className="text-zinc-500">-- Click to Select a Sandbox Test Listing (10 curations available) --</option>
-                            <optgroup label="✅ Verifiably Legitimate Listings">
-                              {testCases.filter(tc => tc.tier === "Legitimate").map(tc => (
-                                <option key={tc.id} value={tc.id} className="text-emerald-700">
-                                  {tc.name}
-                                </option>
-                              ))}
-                            </optgroup>
-                            <optgroup label="⚠️ Borderline / Precautionary Cases">
-                              {testCases.filter(tc => tc.tier === "Suspicious").map(tc => (
-                                <option key={tc.id} value={tc.id} className="text-amber-700">
-                                  {tc.name}
-                                </option>
-                              ))}
-                            </optgroup>
-                            <optgroup label="❌ Deceptive / Verified Fraud Loops">
-                              {testCases.filter(tc => tc.tier === "Scam").map(tc => (
-                                <option key={tc.id} value={tc.id} className="text-red-750 text-red-700">
-                                  {tc.name}
-                                </option>
-                              ))}
-                            </optgroup>
-                          </select>
-                          <span className="absolute right-3.5 top-3.5 text-zinc-400 pointer-events-none text-xs">▼</span>
-                        </div>
-
-                        {/* Interactive presets action panel when loaded */}
-                        {selectedPresetId && (
-                          <div className="mt-3.5 p-3.5 bg-white border border-zinc-200 rounded-lg" id="preset-details-box">
-                            <div className="flex items-center justify-between gap-2" id="preset-detail-ribbon">
-                              <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded border ${
-                                testCases.find(c => c.id === selectedPresetId)?.tier === "Legitimate" 
-                                  ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                                  : testCases.find(c => c.id === selectedPresetId)?.tier === "Suspicious"
-                                    ? "bg-amber-50 text-amber-800 border-amber-200"
-                                    : "bg-red-50 text-red-800 border-red-200"
-                              }`} id="preset-tier-badge">
-                                {testCases.find(c => c.id === selectedPresetId)?.tier} Listing
-                              </span>
-                            </div>
-
-                            <p className="text-xs text-zinc-650 mt-2 leading-relaxed" id="preset-summary-p">
-                              <strong>Summary:</strong> {testCases.find(c => c.id === selectedPresetId)?.summary}
-                            </p>
-
-                            <div className="mt-4 flex gap-2 flex-col sm:flex-row" id="preset-buttons-row">
-                              <button
-                                id="btn-preset-instant"
-                                type="button"
-                                onClick={() => loadPresetToForm(selectedPresetId, true)}
-                                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4 py-2 text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1"
-                              >
-                                <span>Instant Verify & Score (No API Key Required)</span>
-                                <CheckCircle className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                id="btn-preset-text-only"
-                                type="button"
-                                onClick={() => loadPresetToForm(selectedPresetId, false)}
-                                className="bg-zinc-100 hover:bg-zinc-200 text-zinc-805 text-zinc-700 rounded-lg px-4 py-2 text-xs font-bold transition-colors cursor-pointer"
-                              >
-                                Load Raw Texts Only
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      <p className="text-xs text-zinc-500 mb-5">Analyze a custom job listing using our live Zero-Trust AI crawler.</p>
 
                       {/* Company Name Box */}
                       <div className="mb-4" id="form-inp-company-container">
@@ -1214,206 +1138,26 @@ export default function App() {
                 )}
 
               </AnimatePresence>
-
             </motion.div>
-          )}
+          } />
 
-
-          {/* Dedicated Settings Panel (Replaces intrusion modal / options popup) */}
-          {activeTab === "settings" && (
-            <motion.div
-              key="settings"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="max-w-3xl mx-auto space-y-6"
-              id="settings-tab-panel"
-              role="tabpanel"
-              aria-labelledby="tab-settings-trigger"
-            >
-              
-              <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-2xs" id="settings-card">
-                <div className="flex items-center gap-2 mb-4">
-                  <Sliders className="w-5 h-5 text-indigo-600" />
-                  <h2 className="text-xl font-bold text-zinc-900" id="settings-heading">AI Engine Credentials Setup</h2>
-                </div>
-
-                <p className="text-sm text-zinc-600 mb-6 leading-relaxed" id="settings-introduction-paragraph">
-                  TrueJobPost MVP secures candidate privacy by giving you two choices to power the automated research stage. By default, the app is powered by our server-side secure credentials. If you are a high-volume auditor or need zero-throttling requests, you can paste your personal Google AI Studio API key.
-                </p>
-
-                {/* Hyperlink targeting Google AI Studio alongside 3-step card block */}
-                <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-5 mb-6" id="creation-instructions-box">
-                  <h3 className="text-sm font-bold text-indigo-950 flex items-center gap-2 mb-3">
-                    <Award className="w-4.5 h-4.5 text-indigo-600" />
-                    How to get your free Google AI Studio Key
-                  </h3>
-                  
-                  {/* Step list instruction cards */}
-                  <ol className="space-y-3.5 text-xs text-indigo-950" id="instructions-orderly-list">
-                    <li className="flex gap-2.5" id="instruction-step-1">
-                      <span className="w-5 h-5 bg-indigo-200 text-indigo-900 font-bold rounded-full flex items-center justify-center shrink-0">1</span>
-                      <p className="pt-0.5">
-                        Open the official Google AI Studio console:{" "}
-                        <a 
-                          href="https://aistudio.google.com/" 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="font-bold underline text-indigo-700 hover:text-indigo-800 flex inline-flex items-center gap-0.5 whitespace-nowrap"
-                          id="ai-studio-external-hyperlink"
-                        >
-                          Google AI Studio Key Directory <ExternalLink className="w-3 h-3" />
-                        </a>
-                      </p>
-                    </li>
-                    <li className="flex gap-2.5" id="instruction-step-2">
-                      <span className="w-5 h-5 bg-indigo-200 text-indigo-900 font-bold rounded-full flex items-center justify-center shrink-0">2</span>
-                      <p className="pt-0.5">Click the prominent blue <strong>&quot;Create API Key&quot;</strong> button, select/choose a Cloud project, and copy your newly generated token key.</p>
-                    </li>
-                    <li className="flex gap-2.5" id="instruction-step-3">
-                      <span className="w-5 h-5 bg-indigo-200 text-indigo-900 font-bold rounded-full flex items-center justify-center shrink-0">3</span>
-                      <p className="pt-0.5">Paste that copied character string into the dedicated box below and press <strong>Validate API Key</strong> to activate.</p>
-                    </li>
-                  </ol>
-                </div>
-
-                {/* Toggle selecting Custom vs Defaults */}
-                <fieldset className="mb-6 p-4 bg-zinc-50 border border-zinc-200 rounded-xl" id="custom-activation-field">
-                  <legend className="sr-only">Choose API Key Authentication Source</legend>
-                  
-                  <div className="flex items-start gap-3" id="use-custom-key-row">
-                    <input
-                      type="checkbox"
-                      id="chk-custom-key-toggle"
-                      checked={useCustomKey}
-                      onChange={(e) => handleToggleCustom(e.target.checked)}
-                      className="w-5 h-5 mt-0.5 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-600 cursor-pointer shrink-0"
-                    />
-                    <div className="flex-1">
-                      <label htmlFor="chk-custom-key-toggle" className="block text-sm font-bold text-zinc-900 cursor-pointer">
-                        Enable Custom Personal API Key overriding
-                      </label>
-                      <p className="text-xs text-zinc-600 mt-0.5">Bypass app-injected keys and use your own client sandbox authentication instead.</p>
-                    </div>
-                  </div>
-
-                  {useCustomKey && (
-                    <div className="mt-4 border-t border-zinc-200 pt-4" id="custom-input-nested-box">
-                      <label 
-                        htmlFor="inp-custom-key" 
-                        className="block text-xs font-bold text-zinc-700 mb-1.5 uppercase tracking-wider"
-                        id="label-custom-key"
-                      >
-                        Paste Personal Gemini API Key
-                      </label>
-                      
-                      <div className="flex gap-3 flex-col sm:flex-row" id="custom-input-fields-row">
-                        <input
-                          id="inp-custom-key"
-                          type="password"
-                          value={customApiKey}
-                          onChange={(e) => handleSaveKey(e.target.value)}
-                          placeholder="AIzaSy..."
-                          className="flex-1 p-2.5 rounded-lg border border-zinc-300 text-sm font-mono tracking-widest bg-white text-zinc-900 focus:ring-2 focus:ring-indigo-600 focus:outline-none"
-                        />
-                        {customApiKey && (
-                          <button
-                            id="clear-custom-key-btn"
-                            type="button"
-                            onClick={handleClearKey}
-                            className="bg-zinc-200 hover:bg-zinc-300 text-zinc-800 text-xs px-3 rounded-lg py-2.5 font-bold cursor-pointer shrink-0"
-                          >
-                            Clear
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                </fieldset>
-
-                {/* Live validation feedback banner */}
-                <div className="mt-6 border-t border-zinc-100 pt-6 flex items-center justify-between gap-4 flex-wrap" id="settings-action-row">
-                  <div id="validation-status-reporter">
-                    
-                    {/* Quiet validation loader status */}
-                    {isValidating && (
-                      <div className="flex items-center gap-1.5 text-xs text-zinc-500" id="reporter-loading">
-                        <span className="w-3.5 h-3.5 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin" />
-                        <span>Validating credentials connectivity...</span>
-                      </div>
-                    )}
-
-                    {/* Green success status */}
-                    {!isValidating && validationSuccess === true && (
-                      <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-lg" id="reporter-success">
-                        <ShieldCheck className="w-4 h-4" />
-                        <span className="font-semibold">Creds verified successfully! Staging services are unlocked.</span>
-                      </div>
-                    )}
-
-                    {/* Red failure status */}
-                    {!isValidating && validationSuccess === false && (
-                      <div className="flex items-center gap-1.5 text-xs text-red-800 bg-red-50 border border-red-100 px-3 py-1.5 rounded-lg max-w-md" id="reporter-failure">
-                        <XCircle className="w-4 h-4 shrink-0" />
-                        <div className="truncate">
-                          <span className="font-semibold block">Key verification failed:</span>
-                          <span className="text-[11px] block text-red-600 truncate">{validationError || "Invalid key or bad connection parameters."}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Unvalidated default env status */}
-                    {!isValidating && validationSuccess === null && (
-                      <div className="text-xs text-zinc-500" id="reporter-unvalidated">
-                        Status: Unvalidated. Please click Validate to verify active configuration keys.
-                      </div>
-                    )}
-
-                  </div>
-
-                  <button
-                    id="validate-creds-btn"
-                    disabled={isValidating || (useCustomKey && !customApiKey.trim())}
-                    onClick={() => validateActiveConfiguration(false)}
-                    className={`px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
-                      isValidating || (useCustomKey && !customApiKey.trim())
-                        ? "bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed"
-                        : "bg-indigo-600 hover:bg-indigo-700 text-white"
-                    }`}
-                  >
-                    <span>Validate API Key</span>
-                    <Shield className="w-4 h-4" />
-                  </button>
-
-                </div>
-
-              </div>
-
-              {/* Security info and WCAG compliance assurance card */}
-              <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-2xs" id="compliance-assurance-card">
-                <h3 className="text-sm font-bold text-zinc-900 mb-2 flex items-center gap-1.5">
-                  <UserCheck className="w-4.5 h-4.5 text-indigo-600" />
-                  Compliance & Zero-Trust Safety Guidelines
-                </h3>
-                <ul className="list-disc pl-5 text-xs text-zinc-650 space-y-2 leading-relaxed" id="compliance-bullets">
-                  <li>
-                    <strong>Privacy Sandbox Isolation:</strong> The custom API key is handled directly by your local browser&apos;s <code>window.localStorage</code> sandbox and never leaves your computing machine. It is stored inside a client container to avoid server-side logging.
-                  </li>
-                  <li>
-                    <strong>WCAG 2.1 AA Compliance:</strong> The TrueJobPost interface enforces high semantic header structures (H1-H4), appropriate contrast values (body text to slate background ratio &gt; 4.5:1), and native keyboard focus management rings.
-                  </li>
-                  <li>
-                    <strong>Anti-AI-Slop Integrity:</strong> Built for human auditing loops. We avoid fake background console logs or fancy imaginary technical diagnostics. Outputs translate to descriptive, honest risk points and citations.
-                  </li>
-                </ul>
-              </div>
-
-            </motion.div>
-          )}
-
-        </AnimatePresence>
+          <Route path="/tutorial" element={<Tutorial />} />
+          <Route path="/cases" element={<RealUseCases onLoadPreset={loadPresetToForm} />} />
+          <Route path="/settings" element={
+            <SettingsPage 
+              useCustomKey={useCustomKey}
+              customApiKey={customApiKey}
+              isEnvKeyAvailable={isEnvKeyAvailable}
+              validationSuccess={validationSuccess}
+              isValidating={isValidating}
+              validationError={validationError}
+              onToggleCustomKey={handleToggleCustom}
+              onSaveCustomKey={handleSaveKey}
+              onClearCustomKey={handleClearKey}
+              onValidate={() => validateActiveConfiguration(false)}
+            />
+          } />
+        </Routes>
 
       </main>
 

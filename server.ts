@@ -132,109 +132,68 @@ Please execute Google Search Grounding to evaluate:
 
 List any suspicious string tokens found in 'suspiciousKeywordsFound'. Provide a short, professional, and clear 'evidenceNotes' describing what was found. List any specific suspicious text blocks in 'scamIndicators'.`;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        contents: promptText,
-        config: {
-          systemInstruction,
-          tools: [{ googleSearch: {} }],
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              companyUrl: {
-                type: Type.STRING,
-                description: "The found official corporate website domain (e.g. stripe.com), or 'undefined' if not clearly verified."
-              },
-              isHttps: {
-                type: Type.STRING,
-                description: "Website secure status indicator: true, false, or 'undefined'."
-              },
-              domainAge: {
-                type: Type.STRING,
-                description: "Extracted domain age status: 'New', 'Mid', 'Old', or 'Undefined'."
-              },
-              hasNordVpnAlert: {
-                type: Type.STRING,
-                description: "Domain reputation/threat alert: true, false, or 'undefined'."
-              },
-              linkedinBadge: {
-                type: Type.STRING,
-                description: "LinkedIn company verification status: 'verified', 'unverified', or 'undefined'."
-              },
-              linkedinEmployees: {
-                type: Type.STRING,
-                description: "LinkedIn associate workers profile density: 'none', 'few', 'many', or 'undefined'."
-              },
-              hasEmployeeActivity: {
-                type: Type.STRING,
-                description: "Real employer activity depth indicator: true, false, or 'undefined'."
-              },
-              linkedinPageCreation: {
-                type: Type.STRING,
-                description: "LinkedIn page creation date age status: 'recent', 'established', or 'undefined'."
-              },
-              externalFootprint: {
-                type: Type.STRING,
-                description: "Third party directories presence status: 'robust', 'missing', 'flagged', or 'undefined'."
-              },
-              hasNoFrictionInterview: {
-                type: Type.STRING,
-                description: "Does hiring pipeline use chat app interviews: true, false, or 'undefined'."
-              },
-              hasFinancialRequests: {
-                type: Type.STRING,
-                description: "Scammer equipment/check/material fee requests: true, false, or 'undefined'."
-              },
-              hasGenericEmails: {
-                type: Type.STRING,
-                description: "Uses general emails for recruitment: true, false, or 'undefined'."
-              },
-              hasUnrealisticPay: {
-                type: Type.STRING,
-                description: "Presents outrageously high hourly rate decoy: true, false, or 'undefined'."
-              },
-              hasEasyApplyRedirect: {
-                type: Type.STRING,
-                description: "Fake shell post redirecting to paid subscription training/credit checks: true, false, or 'undefined'."
-              },
-              suspiciousKeywordsFound: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING },
-                description: "List of malicious tokens found: 'WhatsApp', 'Telegram', 'check', 'Signal', 'Skype', 'equipment'."
-              },
-              evidenceNotes: {
-                type: Type.STRING,
-                description: "Detailed bulleted summary of research outcomes found via search grounding and text analysis."
-              },
-              scamIndicators: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING },
-                description: "Exact diagnostic text fragments extracted from the job description triggering caution."
-              }
-            },
-            required: [
-              "companyUrl",
-              "isHttps",
-              "domainAge",
-              "hasNordVpnAlert",
-              "linkedinBadge",
-              "linkedinEmployees",
-              "hasEmployeeActivity",
-              "linkedinPageCreation",
-              "externalFootprint",
-              "hasNoFrictionInterview",
-              "hasFinancialRequests",
-              "hasGenericEmails",
-              "hasUnrealisticPay",
-              "hasEasyApplyRedirect",
-              "suspiciousKeywordsFound",
-              "evidenceNotes",
-              "scamIndicators"
-            ]
+      const configSchema = {
+        type: Type.OBJECT,
+        properties: {
+          companyUrl: { type: Type.STRING, description: "The found official corporate website domain (e.g. stripe.com), or 'undefined' if not clearly verified." },
+          isHttps: { type: Type.STRING, description: "Website secure status indicator: true, false, or 'undefined'." },
+          domainAge: { type: Type.STRING, description: "Extracted domain age status: 'New', 'Mid', 'Old', or 'Undefined'." },
+          hasNordVpnAlert: { type: Type.STRING, description: "Domain reputation/threat alert: true, false, or 'undefined'." },
+          linkedinBadge: { type: Type.STRING, description: "LinkedIn company verification status: 'verified', 'unverified', or 'undefined'." },
+          linkedinEmployees: { type: Type.STRING, description: "LinkedIn associate workers profile density: 'none', 'few', 'many', or 'undefined'." },
+          hasEmployeeActivity: { type: Type.STRING, description: "Real employer activity depth indicator: true, false, or 'undefined'." },
+          linkedinPageCreation: { type: Type.STRING, description: "LinkedIn page creation date age status: 'recent', 'established', or 'undefined'." },
+          externalFootprint: { type: Type.STRING, description: "Third party directories presence status: 'robust', 'missing', 'flagged', or 'undefined'." },
+          hasNoFrictionInterview: { type: Type.STRING, description: "Does hiring pipeline use chat app interviews: true, false, or 'undefined'." },
+          hasFinancialRequests: { type: Type.STRING, description: "Scammer equipment/check/material fee requests: true, false, or 'undefined'." },
+          hasGenericEmails: { type: Type.STRING, description: "Uses general emails for recruitment: true, false, or 'undefined'." },
+          hasUnrealisticPay: { type: Type.STRING, description: "Presents outrageously high hourly rate decoy: true, false, or 'undefined'." },
+          hasEasyApplyRedirect: { type: Type.STRING, description: "Fake shell post redirecting to paid subscription training/credit checks: true, false, or 'undefined'." },
+          suspiciousKeywordsFound: { type: Type.ARRAY, items: { type: Type.STRING }, description: "List of malicious tokens found: 'WhatsApp', 'Telegram', 'check', 'Signal', 'Skype', 'equipment'." },
+          evidenceNotes: { type: Type.STRING, description: "Detailed bulleted summary of research outcomes found via search grounding and text analysis." },
+          scamIndicators: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Exact diagnostic text fragments extracted from the job description triggering caution." }
+        },
+        required: [
+          "companyUrl", "isHttps", "domainAge", "hasNordVpnAlert", "linkedinBadge", 
+          "linkedinEmployees", "hasEmployeeActivity", "linkedinPageCreation", 
+          "externalFootprint", "hasNoFrictionInterview", "hasFinancialRequests", 
+          "hasGenericEmails", "hasUnrealisticPay", "hasEasyApplyRedirect", 
+          "suspiciousKeywordsFound", "evidenceNotes", "scamIndicators"
+        ]
+      };
+
+      let response;
+      let usedGrounding = true;
+      try {
+        response = await ai.models.generateContent({
+          model: "gemini-3.5-flash",
+          contents: promptText,
+          config: {
+            systemInstruction,
+            tools: [{ googleSearch: {} }],
+            responseMimeType: "application/json",
+            responseSchema: configSchema
           }
+        });
+      } catch (err: any) {
+        // Fallback if Google Search Grounding quota is exhausted or blocked
+        if (err.message?.includes("429") || err.status === 429 || err.message?.includes("RESOURCE_EXHAUSTED") || err.message?.includes("quota")) {
+          console.warn("Google Search Grounding quota exceeded. Falling back to non-grounded parsing.");
+          usedGrounding = false;
+          response = await ai.models.generateContent({
+            model: "gemini-3.5-flash",
+            contents: promptText,
+            config: {
+              systemInstruction,
+              responseMimeType: "application/json",
+              // No tools passed here to bypass the Search quota limitation
+              responseSchema: configSchema
+            }
+          });
+        } else {
+          throw err;
         }
-      });
+      }
 
       const text = response.text || "{}";
       const cleanedText = text.trim();
@@ -259,6 +218,10 @@ List any suspicious string tokens found in 'suspiciousKeywordsFound'. Provide a 
         if (parseResult.hasUnrealisticPay === "false") parseResult.hasUnrealisticPay = false;
         if (parseResult.hasEasyApplyRedirect === "true") parseResult.hasEasyApplyRedirect = true;
         if (parseResult.hasEasyApplyRedirect === "false") parseResult.hasEasyApplyRedirect = false;
+
+        if (!usedGrounding) {
+            parseResult.evidenceNotes = "[Note: Live Web Search Grounding quota was exhausted or blocked. Evaluated purely via static text analysis.]\n" + (parseResult.evidenceNotes || "");
+        }
 
       } catch (jsonErr) {
         console.warn("JSON parsing failed for content:", cleanedText);
