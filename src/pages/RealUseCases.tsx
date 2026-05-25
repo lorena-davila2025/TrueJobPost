@@ -1,26 +1,13 @@
 import React, { useState } from 'react';
 import { ExternalLink, ShieldCheck, ShieldAlert, Sliders, CheckCircle, AlertTriangle } from 'lucide-react';
 import { testCases } from '../data/testCases';
+import { computeTrustScore } from '../utils/scoring';
 
 interface RealUseCasesProps {
-  onLoadPreset?: (presetId: string, directScore: boolean) => void;
+  onLoadPreset?: (presetId: string) => void;
 }
 
 export default function RealUseCases({ onLoadPreset }: RealUseCasesProps) {
-  const [selectedPresetId, setSelectedPresetId] = useState<string>("");
-
-  const selectedCase = testCases.find(c => c.id === selectedPresetId);
-
-  // Generate fallback URLs based on the companies to simulate them being found on the internet
-  const getJobUrl = (companyName: string) => {
-    const safeName = companyName.toLowerCase().replace(/[^a-z0-z]/g, '');
-    if (companyName.includes("Stripe")) return "https://jobs.stripe.com/roles";
-    if (companyName.includes("Airbnb")) return "https://careers.airbnb.com/positions";
-    if (companyName.includes("Patagonia")) return "https://www.patagonia.com/careers/";
-    if (companyName.includes("Google")) return "https://careers.google.com/";
-    // Mock URLs for scam cases representing where they might have been scraped
-    return `https://www.linkedin.com/jobs/search?keywords=${safeName}`;
-  };
 
   return (
     <div className="max-w-6xl mx-auto py-12 px-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -38,18 +25,22 @@ export default function RealUseCases({ onLoadPreset }: RealUseCasesProps) {
         </div>
         
         <p className="text-sm text-zinc-600 mb-6 leading-relaxed">
-          Test our scoring matrix strictly mapping 10 realistic corporate templates, ranging from verified Fortune 500 portals to dangerous advance-fee check traps.
+          Test our scoring matrix strictly mapping realistic corporate templates, ranging from verified Fortune 500 portals to dangerous advance-fee check traps.
         </p>
 
         <div className="relative mb-6" id="preset-dropdown-container">
           <label htmlFor="preset-test-select" className="sr-only">Choose a sandbox test listing template</label>
           <select
             id="preset-test-select"
-            value={selectedPresetId}
-            onChange={(e) => setSelectedPresetId(e.target.value)}
+            value={""}
+            onChange={(e) => {
+               if (onLoadPreset && e.target.value) {
+                  onLoadPreset(e.target.value);
+               }
+            }}
             className="w-full p-3 bg-zinc-50 hover:bg-zinc-100 transition-colors border border-zinc-300 text-zinc-900 font-semibold rounded-lg text-sm focus:ring-2 focus:ring-indigo-600 focus:outline-none cursor-pointer appearance-none"
           >
-            <option value="" className="text-zinc-500">-- Click to Select a Sandbox Test Listing (10 curations available) --</option>
+            <option value="" className="text-zinc-500">-- Click to Select a Sandbox Test Listing --</option>
             <optgroup label="✅ Verifiably Legitimate Listings">
               {testCases.filter(tc => tc.tier === "Legitimate").map(tc => (
                 <option key={tc.id} value={tc.id} className="text-emerald-700">
@@ -57,14 +48,14 @@ export default function RealUseCases({ onLoadPreset }: RealUseCasesProps) {
                 </option>
               ))}
             </optgroup>
-            <optgroup label="⚠️ Borderline / Precautionary Cases">
+            <optgroup label="⚠️ Precautionary Cases">
               {testCases.filter(tc => tc.tier === "Suspicious").map(tc => (
                 <option key={tc.id} value={tc.id} className="text-amber-700">
                   {tc.name}
                 </option>
               ))}
             </optgroup>
-            <optgroup label="❌ Deceptive / Verified Fraud Loops">
+            <optgroup label="❌ Deceptive Cases">
               {testCases.filter(tc => tc.tier === "Scam").map(tc => (
                 <option key={tc.id} value={tc.id} className="text-red-750 text-red-700">
                   {tc.name}
@@ -75,67 +66,77 @@ export default function RealUseCases({ onLoadPreset }: RealUseCasesProps) {
           <span className="absolute right-4 top-3.5 text-zinc-400 pointer-events-none text-sm">▼</span>
         </div>
 
-        {selectedCase && (
-          <div className="bg-zinc-50 border border-zinc-200 rounded-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className={`p-4 border-b flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row ${
-              selectedCase.tier === 'Legitimate' ? 'bg-emerald-50 border-emerald-100' : 
-              selectedCase.tier === 'Suspicious' ? 'bg-amber-50 border-amber-100' : 'bg-red-50 border-red-100'
-            }`}>
-              <div>
-                <span className={`inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase px-2 py-0.5 mb-2 rounded border ${
-                    selectedCase.tier === "Legitimate" 
-                      ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                      : selectedCase.tier === "Suspicious"
-                        ? "bg-amber-100 text-amber-800 border-amber-200"
-                        : "bg-red-100 text-red-800 border-red-200"
-                  }`}>
-                  {selectedCase.tier === 'Legitimate' ? <ShieldCheck className="w-3.5 h-3.5" /> : 
-                   selectedCase.tier === 'Suspicious' ? <AlertTriangle className="w-3.5 h-3.5" /> :
-                   <ShieldAlert className="w-3.5 h-3.5" />}
-                  {selectedCase.tier} Listing
+      </div>
+
+      <div className="mt-16 text-center mb-8">
+        <h2 className="text-2xl font-bold text-zinc-900">Documented Examples</h2>
+        <p className="text-zinc-600 mt-2">See how our parameters align with historical listings processed locally by the engine.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {testCases.map((useCase) => {
+          const scoreReport = computeTrustScore(useCase.mockData);
+          const status = scoreReport.class === 'safe' ? 'Legitimate' : 
+                         scoreReport.class === 'warning' ? 'Suspicious' : 'Scam';
+                         
+          const keySignals = scoreReport.breakdown
+            .filter(item => item.impact < 0)
+            .map(item => item.label)
+            .slice(0, 4);
+
+          return (
+          <div key={useCase.id} className="bg-white border border-zinc-200 rounded-2xl flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div className={`p-4 border-b ${status === 'Legitimate' ? 'bg-emerald-50 border-emerald-100' : 'bg-red-50 border-red-100'}`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className={`text-xs font-bold uppercase tracking-wider px-2 py-1 rounded ${status === 'Legitimate' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}>
+                  {status} Case
                 </span>
-                <h3 className="text-lg font-bold text-zinc-900">{selectedCase.company}</h3>
+                {status === 'Legitimate' ? <ShieldCheck className="w-5 h-5 text-emerald-600" /> : <ShieldAlert className="w-5 h-5 text-red-600" />}
+              </div>
+              <h2 className="text-xl font-bold text-zinc-900">{useCase.company}</h2>
+              <p className="text-sm font-medium text-zinc-700">{useCase.role}</p>
+            </div>
+            
+            <div className="p-5 flex-1 flex flex-col">
+              <p className="text-sm text-zinc-600 leading-relaxed mb-6 flex-1">
+                {useCase.summary}
+              </p>
+
+              <div className="mb-6 space-y-2">
+                <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex justify-between items-center">
+                   <span>Key Signals Detected</span>
+                   <span className="text-indigo-600 font-extrabold text-lg" title="Final Score">{scoreReport.score} / 100</span>
+                </h4>
+                <ul className="space-y-1.5 list-disc pl-4 text-xs font-medium text-zinc-700 marker:text-zinc-300">
+                  {useCase.mockData.suspiciousKeywordsFound && useCase.mockData.suspiciousKeywordsFound.length > 0 && (
+                    <li>Phrases: {useCase.mockData.suspiciousKeywordsFound.join(", ")}</li>
+                  )}
+                  {keySignals.length > 0 ? keySignals.map((signal, idx) => (
+                    <li key={idx}>Flag: {signal.split(':')[0]}</li>
+                  )) : <li>No distinct red flags found</li>}
+                </ul>
               </div>
 
-              {/* URL Display */}
               <a
-                href={getJobUrl(selectedCase.company)}
+                href={useCase.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-white hover:bg-zinc-50 text-zinc-800 text-xs font-semibold py-2 px-3 border border-zinc-300 rounded-lg flex items-center justify-center gap-2 transition-colors whitespace-nowrap"
+                className="w-full bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-sm font-semibold py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors transition mb-2"
               >
-                View Job Post Online <ExternalLink className="w-3.5 h-3.5 text-indigo-600" />
+                {status === "Scam" || status === "Suspicious" ? "View FTC Scam Info" : "Visit Company Portal"} <ExternalLink className="w-4 h-4 ml-1" />
               </a>
-            </div>
 
-            <div className="p-5">
-              <div className="mb-6">
-                <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Detailed Summary</h4>
-                <p className="text-sm text-zinc-650 leading-relaxed bg-white border border-zinc-200 rounded p-3">
-                  {selectedCase.summary}
-                </p>
-              </div>
-
-              <div className="flex gap-3 flex-col sm:flex-row pt-4 border-t border-zinc-200">
-                <button
-                  type="button"
-                  onClick={() => onLoadPreset && onLoadPreset(selectedCase.id, true)}
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4 py-2.5 text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  <span>Instant Verify & Score (No API Key Required)</span>
-                  <CheckCircle className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onLoadPreset && onLoadPreset(selectedCase.id, false)}
-                  className="bg-white border border-zinc-300 hover:bg-zinc-50 text-zinc-700 rounded-lg px-4 py-2.5 text-sm font-bold transition-colors cursor-pointer"
-                >
-                  Load Raw Texts Only
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => onLoadPreset && onLoadPreset(useCase.id)}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-4 py-2.5 text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <span>Load Sandbox Preset Into Extractor</span>
+                <CheckCircle className="w-4 h-4 ml-1" />
+              </button>
             </div>
           </div>
-        )}
+        )})}
       </div>
 
     </div>

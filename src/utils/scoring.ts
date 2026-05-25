@@ -28,16 +28,16 @@ export function computeTrustScore(data: JobAnalysisData): ScoreReport {
   // 2. Domain Register Age status
   let domainAgeImpact = 0;
   let domainNotes = "";
-  if (data.domainAge === "New") {
+  if (data.domainAge === "new") {
     domainAgeImpact = -35;
     domainNotes = "The company website domain was registered within 1 year. Recruitment scammers frequently rely on brand-new temporary domains to host copycat corporate pages.";
-  } else if (data.domainAge === "Undefined") {
+  } else if (data.domainAge === "undefined") {
     domainAgeImpact = -10;
     domainNotes = "No domain registration age could be fetched. Legitimate firms maintain search ground histories.";
-  } else if (data.domainAge === "Mid") {
+  } else if (data.domainAge === "mid") {
     domainAgeImpact = -5;
     domainNotes = "Domain age is in the moderate bracket (1-5 years). Authentic early startup behavior, but requires secondary signal checks.";
-  } else if (data.domainAge === "Old") {
+  } else if (data.domainAge === "old") {
     domainAgeImpact = 0;
     domainNotes = "Highly robust multi-year domain footprint (5+ years active). Standard Enterprise profile indicator.";
   }
@@ -45,7 +45,7 @@ export function computeTrustScore(data: JobAnalysisData): ScoreReport {
   breakdown.push({
     label: `Corporate Domain Registry Age: ${data.domainAge}`,
     impact: domainAgeImpact,
-    isRedFlag: data.domainAge === "New",
+    isRedFlag: data.domainAge === "new",
     notes: domainNotes
   });
 
@@ -74,18 +74,21 @@ export function computeTrustScore(data: JobAnalysisData): ScoreReport {
   let badgeImpact = 0;
   let badgeNotes = "";
   if (data.linkedinBadge === "unverified") {
-    badgeImpact = -15;
-    badgeNotes = "The LinkedIn corporate company profile page is unverified. Under LinkedIn guidelines, genuine enterprises authenticate their pages using official domains.";
+    badgeImpact = -10;
+    badgeNotes = "The company profile page is explicitly unverified under standard view configurations.";
+  } else if (data.linkedinBadge === "login_wall") {
+    badgeImpact = 0; // Neutralized: No penalty if browser is blocked by LinkedIn login security
+    badgeNotes = "Verification badge visibility is restricted by a platform login wall. No penalty applied; secondary parameters will determine legitimacy.";
   } else if (data.linkedinBadge === "undefined") {
     badgeImpact = -5;
-    badgeNotes = "Could not track down any associated company profile on social networks.";
+    badgeNotes = "Platform verification data was unavailable during automated analysis.";
   } else {
     badgeImpact = 0;
-    badgeNotes = "Corporate profile bears the official verification badge, certifying it matches genuine corporate registry data.";
+    badgeNotes = "Corporate identity features an authenticated verification profile.";
   }
   score += badgeImpact;
   breakdown.push({
-    label: "Corporate LinkedIn Badge Status",
+    label: "Corporate Verification Status",
     impact: badgeImpact,
     isRedFlag: data.linkedinBadge === "unverified",
     notes: badgeNotes
@@ -95,21 +98,24 @@ export function computeTrustScore(data: JobAnalysisData): ScoreReport {
   let empImpact = 0;
   let empNotes = "";
   if (data.linkedinEmployees === "none") {
-    empImpact = -25;
-    empNotes = "Zero linked employees exist on LinkedIn despite asserting an active corporate agency identity. Core marker of modern virtual shell scams.";
-  } else if (data.linkedinEmployees === "few") {
-    empImpact = -10;
-    empNotes = "A very small workforce (1-5 associated profiles). If the listing states they are a leading agency/enterprise, this discrepancy is highly suspicious.";
-  } else if (data.linkedinEmployees === "undefined") {
-    empImpact = -5;
-    empNotes = "Associated worker numbers check unverified.";
-  } else {
+    empImpact = -30;
+    empNotes = "Zero linked personnel profiles discovered. A total absence of workers is a primary marker of shell recruitment setups.";
+  } else if (data.linkedinEmployees === "boutique") {
+    empImpact = 0; // Protected: 1-10 real employees is normal for small consulting agencies
+    empNotes = "Boutique workforce profile verified (1-10 profiles). Completely consistent with micro-enterprises and early independent groups.";
+  } else if (data.linkedinEmployees === "medium") {
     empImpact = 0;
-    empNotes = "Satisfactory linked workforce registry profile count found.";
+    empNotes = "Established mid-tier workforce size confirmed (11-50 verified profiles).";
+  } else if (data.linkedinEmployees === "large") {
+    empImpact = 0;
+    empNotes = "Highly robust enterprise workforce deployment verified (>50 associated profiles).";
+  } else {
+    empImpact = -5;
+    empNotes = "Active workforce distribution counts returned unverified.";
   }
   score += empImpact;
   breakdown.push({
-    label: "Active Worker Registry",
+    label: `Team Workforce Footprint: ${data.linkedinEmployees}`,
     impact: empImpact,
     isRedFlag: data.linkedinEmployees === "none",
     notes: empNotes
@@ -118,21 +124,24 @@ export function computeTrustScore(data: JobAnalysisData): ScoreReport {
   // 6. Linked Employee Activity depth check
   let activityImpact = 0;
   let activityNotes = "";
-  if (data.hasEmployeeActivity === false) {
-    activityImpact = -15;
-    activityNotes = "Associated 'employees' exhibit placeholder profiles: no posts, low connection counts (<100), and static generic headshots. Common hallmark of bot syndicates.";
-  } else if (data.hasEmployeeActivity === "undefined") {
+  if (data.hasEmployeeActivity === "fake") {
+    activityImpact = -25;
+    activityNotes = "Associated profiles exhibit automated bot markers: empty accounts, zero public text engagement, and static stock headshots.";
+  } else if (data.hasEmployeeActivity === "login_wall") {
+    activityImpact = 0; // Neutralized
+    activityNotes = "Staff platform engagement histories are protected behind a security sign-in wall. Bypassing check parameters to remain neutral.";
+  } else if (data.hasEmployeeActivity === "low" || data.hasEmployeeActivity === "undefined") {
     activityImpact = -5;
-    activityNotes = "Employee activity feedback status is unverified.";
+    activityNotes = "Organic employee activity records are thin or unverified.";
   } else {
     activityImpact = 0;
-    activityNotes = "Connected employees represent organic, active profiles with standard professional trails.";
+    activityNotes = "Associated profiles display regular, active professional footprints.";
   }
   score += activityImpact;
   breakdown.push({
-    label: "Organic Profile Activity Depth",
+    label: "Team Profile Activity Depth",
     impact: activityImpact,
-    isRedFlag: data.hasEmployeeActivity === false,
+    isRedFlag: data.hasEmployeeActivity === "fake",
     notes: activityNotes
   });
 
@@ -161,23 +170,24 @@ export function computeTrustScore(data: JobAnalysisData): ScoreReport {
   let footprintImpact = 0;
   let footprintNotes = "";
   if (data.externalFootprint === "missing") {
-    footprintImpact = -20;
-    footprintNotes = "No independent records found on Glassdoor reviews, Crunchbase, Better Business Bureau, or official local legal registrations. Scammers easily fake site domains but cannot falsify global state legal frameworks.";
+    footprintImpact = -25;
+    footprintNotes = "No independent records found on Glassdoor, Crunchbase, or corporate legal registrations. Genuine entities maintain external regulatory trails.";
   } else if (data.externalFootprint === "flagged") {
-    footprintImpact = -40;
-    footprintNotes = "CRITICAL: The company name holds active warnings, fraud reports, or identity phish alerts on trusted scam databases or Glassdoor worker reviews.";
+    footprintImpact = -50;
+    const sources = data.flaggedSourceUrls && data.flaggedSourceUrls.length > 0 ? ` Source logs: ${data.flaggedSourceUrls.join(', ')}` : "";
+    footprintNotes = `CRITICAL FRAUD ALERT: This organization identity matches active risk warnings, scam advisories, or identity phishing reports in public directories.${sources}`;
   } else if (data.externalFootprint === "undefined") {
     footprintImpact = -5;
     footprintNotes = "External directory registration lookup unverified.";
   } else {
     footprintImpact = 0;
-    footprintNotes = "Official legal registry files, Crunchbase rounds, or Glassdoor indexes correspond securely.";
+    footprintNotes = "Official legal records or historical directory entries found across external frameworks.";
   }
   score += footprintImpact;
   breakdown.push({
-    label: "Independent Corporate Footprint",
+    label: "External Registry Footprint Check",
     impact: footprintImpact,
-    isRedFlag: data.externalFootprint === "flagged" || data.externalFootprint === "missing",
+    isRedFlag: data.externalFootprint === "flagged",
     notes: footprintNotes
   });
 

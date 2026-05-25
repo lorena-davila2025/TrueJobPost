@@ -1,13 +1,15 @@
 export interface JobAnalysisData {
   companyUrl: string;
+  linkedinUrl?: string;
   isHttps: boolean | "undefined";
-  domainAge: "New" | "Mid" | "Old" | "Undefined";
+  domainAge: "new" | "mid" | "old" | "undefined";
   hasNordVpnAlert: boolean | "undefined";
-  linkedinBadge: "verified" | "unverified" | "undefined";
-  linkedinEmployees: "none" | "few" | "many" | "undefined";
-  hasEmployeeActivity: boolean | "undefined";
-  linkedinPageCreation: "recent" | "established" | "undefined";
-  externalFootprint: "robust" | "missing" | "flagged" | "undefined";
+  linkedinBadge: "verified" | "unverified" | "login_wall" | "undefined";
+  linkedinEmployees: "large" | "medium" | "boutique" | "none" | "undefined";
+  hasEmployeeActivity: "organic" | "low" | "fake" | "login_wall" | "undefined";
+  linkedinPageCreation: "historical" | "recent" | "undefined";
+  externalFootprint: "found" | "missing" | "flagged" | "undefined";
+  flaggedSourceUrls: string[];
   hasNoFrictionInterview: boolean | "undefined";
   hasFinancialRequests: boolean | "undefined";
   hasGenericEmails: boolean | "undefined";

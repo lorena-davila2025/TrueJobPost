@@ -4,6 +4,8 @@ export interface TestCase {
   id: string;
   name: string;
   company: string;
+  role: string;
+  url: string;
   description: string;
   tier: "Legitimate" | "Suspicious" | "Scam";
   summary: string;
@@ -12,344 +14,96 @@ export interface TestCase {
 
 export const testCases: TestCase[] = [
   {
-    id: "stripe-eng",
-    name: "1. Stripe - Remote Staff Software Engineer",
-    company: "Stripe",
-    tier: "Legitimate",
-    summary: "Standard highly reputable enterprise posting with verified domains, older age tenure, and proper Applicant Tracking links.",
-    description: `Stripe is looking for a Staff Software Engineer to join our Core Security Platforms team. 
-You will build, scale, and maintain absolute baseline encryption APIs trusted by millions.
-Requirements:
-- 8+ years of production experience in Ruby, Go, Java, or Node.js.
-- Deep expertise in secure protocol designs, SSL/TLS handshakes, and cryptographic key rotates.
-- Excellent written communication skills.
-
-To apply, please submit your resume via the Stripe Careers portal (jobs.stripe.com). We manage all applications via our secure Greenhouse ATS.
-Stripe is an equal opportunity employer. We do not charge application fees or request equipment purchases upfront. All hardware is shipped pre-configured via corporate shipping channels.`,
-    mockData: {
-      companyUrl: "stripe.com",
-      isHttps: true,
-      domainAge: "Old",
-      hasNordVpnAlert: false,
-      linkedinBadge: "verified",
-      linkedinEmployees: "many",
-      hasEmployeeActivity: true,
-      linkedinPageCreation: "established",
-      externalFootprint: "robust",
-      hasNoFrictionInterview: false,
-      hasFinancialRequests: false,
-      hasGenericEmails: false,
-      hasUnrealisticPay: false,
-      hasEasyApplyRedirect: false,
-      suspiciousKeywordsFound: [],
-      evidenceNotes: "Established in 2011. Domain stripe.com has 14+ years of reputation history. Over 8,000 workers registered on LinkedIn. Active Glassdoor score of 4.3 with 1,200 verified employee reviews.",
-      scamIndicators: []
-    }
-  },
-  {
-    id: "airbnb-pm",
-    name: "2. Airbnb - Senior Product Manager",
-    company: "Airbnb",
-    tier: "Legitimate",
-    summary: "Authentic corporate posting for a senior management position, showing long domain record and verified social media channels.",
-    description: `Airbnb is seeking an experienced Senior Product Manager to lead user authentication and security features.
-Responsibilities:
-- Collaborate with engineering, data science, and design to design frictionless sign-in workflows.
-- Research modern safety layers, preventing account takeover attempts, and managing MFA enrollments.
-- Standard benefits, 401(k) match, health coverage, and flexible travel credits.
-
-How to Apply: Please submit your portfolio link directly through careers.airbnb.com or via LinkedIn Easy Apply redirecting to our internal Workday. We will never communicate with you via WhatsApp or Telegram. All scheduling happens via official @airbnb.com emails.`,
-    mockData: {
-      companyUrl: "airbnb.com",
-      isHttps: true,
-      domainAge: "Old",
-      hasNordVpnAlert: false,
-      linkedinBadge: "verified",
-      linkedinEmployees: "many",
-      hasEmployeeActivity: true,
-      linkedinPageCreation: "established",
-      externalFootprint: "robust",
-      hasNoFrictionInterview: false,
-      hasFinancialRequests: false,
-      hasGenericEmails: false,
-      hasUnrealisticPay: false,
-      hasEasyApplyRedirect: false,
-      suspiciousKeywordsFound: [],
-      evidenceNotes: "Founded in 2008. Airbnb.com boasts an impeccable secure web track record. Over 6,000 active employees. High organic profile activity on LinkedIn.",
-      scamIndicators: []
-    }
-  },
-  {
-    id: "patagonia-analyst",
-    name: "3. Patagonia - Sustainability Data Analyst",
-    company: "Patagonia",
-    tier: "Legitimate",
-    summary: "Authentic job post for an environmental analyst. Contains legal disclosures, clear corporate handles, and standard enterprise steps.",
-    description: `Patagonia is hiring a Sustainability Data Analyst to join our team in Ventura, CA (Hybrid). 
-You will parse supply-chain carbon metric spreadsheets to verify our Net-Zero emissions progression.
-Core qualifications:
-- Strong skills in Python, SQL, or Tableau.
-- Passion for environmental activism and supply-chain logistics.
-Applying is simple: Fill out your profile details on our career portal (patagonia.com/careers). We do not send checks for home offices or run text chats. Interviews involve structured video sessions on Zoom with panel members.`,
-    mockData: {
-      companyUrl: "patagonia.com",
-      isHttps: true,
-      domainAge: "Old",
-      hasNordVpnAlert: false,
-      linkedinBadge: "verified",
-      linkedinEmployees: "many",
-      hasEmployeeActivity: true,
-      linkedinPageCreation: "established",
-      externalFootprint: "robust",
-      hasNoFrictionInterview: false,
-      hasFinancialRequests: false,
-      hasGenericEmails: false,
-      hasUnrealisticPay: false,
-      hasEasyApplyRedirect: false,
-      suspiciousKeywordsFound: [],
-      evidenceNotes: "Patagonia.com registered in 1995. Official LinkedIn with verified blue mark. Hundreds of employee accounts showing genuine conference participation and activity trail.",
-      scamIndicators: []
-    }
-  },
-  {
-    id: "fictional-startup",
-    name: "4. Zettaflow - Junior Front-End Developer",
-    company: "Zettaflow",
+    id: "job1-crossing-hurdles",
+    name: "1. Crossing Hurdles - Web Developer (HTML,CSS) | Remote",
+    company: "Crossing Hurdles",
+    role: "Web Developer (HTML,CSS) | Remote",
+    url: "https://www.linkedin.com/",
     tier: "Suspicious",
-    summary: "A younger verified early-stage startup. Safe but warrants minor caution since the domain is relatively young and has a moderate footprint.",
-    description: `Zettaflow is an early-stage Web3 developer tools startup. We recently raised our Seed funding round.
-We are looking for a remote Junior Frontend Developer to build React modules using Tailwind CSS and Vite.
-This is a remote contract position starting at $30 - $40/hour depending on experience.
-To apply: Email your github link and resume directly to founders@zettaflow.io or apply through angular-jobs board.
-We conduct video check-ins via Google Meet. All contract agreements are governed by legal Delaware structure laws.`,
+    summary: "Suspiciously simple listing requesting general frontend developer skills, pushing users to \"Easy Apply\" and check emails for an interview, which could be an 'Easy Apply' phishing scheme.",
+    description: `About the job\nPosition: Frontend Developer (HTML, CSS)\nType: Hourly contract\nCompensation: $30 $120/hour\nLocation: Remote\nCommitment: 10 40 hours/week\n\nRole Responsibilities\nBuild responsive and reusable UI components using modern frontend technologies.\nTranslate design files into interactive and scalable web interfaces.\nCollaborate with UX/UI designers and backend developers on integrated solutions.\nDevelop and optimize frontend functionality using React, Angular, Vue.js, Bootstrap, and JavaScript.\nIntegrate frontend applications with APIs and backend services.\nExecute testing processes to ensure code quality and maintainability.\nTroubleshoot and resolve frontend performance and usability issues. \n\nRequirements\nExpert proficiency in HTML, CSS, and JavaScript.\nStrong experience with React, Angular, Vue.js, and Bootstrap.\nExperience converting design files into responsive interfaces.\nKnowledge of API integration and backend connectivity.\nFamiliarity with scalable UI architecture and modular frontend development.\nExperience with unit testing and automation testing practices.\nStrong communication, collaboration, and problem-solving skills. \n\nApplication Process (Takes 20 Min)\nEasy Apply on LinkedIn\nCheck email for next steps\nParticipate in resume evaluation & interview stage\n\nDesired Skills and Experience\nHTML`,
     mockData: {
-      companyUrl: "zettaflow.io",
+      companyUrl: "www.crossinghurdles.com",
+      linkedinUrl: "https://www.linkedin.com/company/crossinghurdles/",
       isHttps: true,
-      domainAge: "Mid",
+      domainAge: "mid",
       hasNordVpnAlert: false,
       linkedinBadge: "unverified",
-      linkedinEmployees: "few",
-      hasEmployeeActivity: true,
-      linkedinPageCreation: "established",
-      externalFootprint: "robust",
+      linkedinEmployees: "boutique",
+      hasEmployeeActivity: "low",
+      linkedinPageCreation: "historical",
+      externalFootprint: "undefined",
+      flaggedSourceUrls: [],
       hasNoFrictionInterview: false,
       hasFinancialRequests: false,
-      hasGenericEmails: false,
-      hasUnrealisticPay: false,
-      hasEasyApplyRedirect: false,
-      suspiciousKeywordsFound: [],
-      evidenceNotes: "Zettaflow is a genuine small tech startup founded 2 years ago. Stable SSL site. LinkedIn page exists but lacks verification badge due to small team sizes (3 active associated employee accounts). Crunchbase ledger confirms Seed round.",
-      scamIndicators: []
-    }
-  },
-  {
-    id: "easyapply-redirect",
-    name: "5. CareerGate - 'Easy Apply' Training Decoy",
-    company: "CareerGate (Agent)",
-    tier: "Suspicious",
-    summary: "An 'Easy Apply' redirect scam where the job posting is just a shell to divert users to paid registration or credit check portals.",
-    description: `URGENT: Entry Level Customer Support Representative. Remote, No Experience Required.
-$25/hour starting base wage. Complete training provided.
-Simply click apply! You will coordinate with our team at quickregister-hubs.info to enroll in our prerequisite training certification first. 
-Once you pass the brief $15 credit history check on our portal, you will be guaranteed a virtual interview stream with leading fortune 500 managers.`,
-    mockData: {
-      companyUrl: "quickregister-hubs.info",
-      isHttps: true,
-      domainAge: "New",
-      hasNordVpnAlert: false,
-      linkedinBadge: "unverified",
-      linkedinEmployees: "none",
-      hasEmployeeActivity: false,
-      linkedinPageCreation: "recent",
-      externalFootprint: "missing",
-      hasNoFrictionInterview: false,
-      hasFinancialRequests: true,
       hasGenericEmails: false,
       hasUnrealisticPay: false,
       hasEasyApplyRedirect: true,
-      suspiciousKeywordsFound: ["credit history check", "apply"],
-      evidenceNotes: "The posting acts as an 'easy apply' redirect shell, sending applicants to quickregister-hubs.info (under 1 month old). No employees. No Glassdoor ratings. Pre-certification fee required.",
-      scamIndicators: ["enroll in our prerequisite training certification first", "brief $15 credit history check"]
+      suspiciousKeywordsFound: ["easy apply", "check email", "takes 20 min"],
+      evidenceNotes: "Company 'Crossing Hurdles' has very little verified robust footprint externally. The role pushes users to an Easy Apply funnel which is often a red flag.",
+      scamIndicators: ["Check email for next steps"]
     }
   },
   {
-    id: "scam-tele-check",
-    name: "6. Text-Interview & Laptop Check scam",
-    company: "Apex Global Logistics (Spoof)",
-    tier: "Scam",
-    summary: "Classic advance-fee recruitment scam. Offers work-from-home data entry, performs immediate interview on Telegram, and demands purchasing equipment through a digital check reimbursement scheme.",
-    description: `Apex Global Logistics is seeking five (5) remote Data Entry Operators for immediate placement.
-Full Time & Part Time remote openings. Shift hours are highly flexible.
-Salary: $42.50 per hour / training wage: $25.00 per hour.
-Duties:
-- Input customer billing coordinates into database.
-- Receive package logistics receipts from your senior team leader.
-To apply, download the Telegram App on your phone/computer and search for our HR hiring manager with username @ApexLogisticsHiring. Setup your profile and send code ApexLog-88 for a direct message text-chat interview session.
-Once hired, or if you do not have office hardware, we will send you a digital check to deposit on your bank app. You must use these funds to purchase your Apple iMac, scanners, and time-tracker software bundle from our certified equipment vendor.`,
+    id: "job2-microsoft",
+    name: "2. Microsoft - Azure Apps and AI Solution Engineer",
+    company: "Microsoft",
+    role: "Azure Apps and AI Solution Engineer",
+    url: "https://careers.microsoft.com/",
+    tier: "Legitimate",
+    summary: "Authentic corporate posting from Microsoft for a specialized technical role, featuring detailed compliance and equal opportunity language.",
+    description: `About the job\nOverview\n\nAre you curious, passionate about building intelligent applications, and ready to solve complex challenges in the AI era? Join us as a Cloud & AI Apps and AI Solution Engineer — We are looking for an Azure Apps and AI Solution Engineer who is a deep subject‑matter expert in designing and delivering modern, intelligent applications using Azure AI Foundry, agentic AI patterns, and the Azure app platform, and who can partner with customers to modernize their application estates and enable AI‑powered workloads, helping technical decision‑makers confidently approve and adopt Azure Apps and AI solutions.In this technical sales role, you'll help customers design secure, scalable, and resilient cloud application architectures that support their AI modernization goals. Using Azure's modern AI and app platform PaaS services, you'll guide organizations through application modernization—designing and optimizing governed, AI‑ready intelligent applications and translating technical capabilities into measurable business outcomes.You'll collaborate across teams to deliver impactful solutions that enhance agility, reduce costs, and unlock value through AI-powered applications.At Small Medium Enterprises and Channel (SME&C), we are leading a high-growth, AI-powered global sales team—one that is deeply connected to our partners and driven by customer success. By uniting our Small Medium Business, Corporate, Strategy, and Partner teams, we are unlocking the largest customer opportunity, backed by the industry's most significant investments. Leveraging the power of AI and our extensive partner ecosystem, we are redefining how businesses of all sizes adopt technology to drive growth and innovation.SME&C is more than a sales organization—it's a culture of innovation, opportunity, and inclusivity. Here, you'll be part of a diverse, high-performing, and customer-obsessed team where collaboration, connection, and continuous learning fuel everything we do.If you thrive in a fast-paced, digital-first environment and are eager to make a meaningful impact, explore how SME&C can be the next step in your career. Together, we are shaping the future of business.As a Cloud & AI Apps and AI Solution Engineer, you'll play a key role in helping mid-market customers modernize their application estates and unlock the full value of Microsoft's cloud. You'll work directly with technical and business stakeholders to design and implement secure, scalable, and resilient architectures that support AI workloads and business-critical applications.Ability to guide customers through application and AI platform modernization decisions, balancing architecture, governance, cost, and performance considerations to enable AI‑ready and enterprise‑scale outcomes.Growth & Career DevelopmentOpportunity to accelerate career growth by modernizing customer environments and enabling secure Cloud & AI adoptionDeepen technical proficiency in architecture design, AI application development, and cloud-native solutionsBuild strategic influence by shaping application, AI, and platform modernization decisions for AI‑driven business workloadsDevelop future‑ready capabilities through continuous learning, certifications, and hands‑on experience with Microsoft Cloud & AI technologies\n\nResponsibilities\n\nCore Skills (All Solution Engineers)Solid technical foundation designing and modernizing Cloud & AI solutions on Azure, partnering with customers to move from legacy environments to secure, scalable cloud‑native architecturesAbility to lead technical migration and modernization discussions, applying structured approaches (e.g., 6R strategy) to guide customer decisionsExperience influencing technical decision makers (architects, platform leads, engineering managers) by translating complex architecture into clear, defensible solutionsSolid understanding of hybrid and cloud‑native architectures, including networking fundamentals (virtual networks, secure connectivity, routing, performance considerations)Knowledge of Azure security and compliance principles, including identity, networking security, data protection, and alignment to regulatory and compliance frameworksHands‑on technical mindset with the ability to design, validate, and explain architectures, not just describe servicesProven collaboration skills working with customers, partners, engineering teams, and account stakeholders to deliver outcomesCommitment to continuous learning, leveraging Microsoft training resources, hands‑on labs, and certifications to deepen Cloud & AI expertiseDrive technical sales by using technical demos, proof of concepts, and technical architecture accelerators to influence solution design and enable deploymentsLead architecture sessions and technical workshops to accelerate Cloud & AI adoptionBuild trusted relationships with platform leads to co-design secure, scalable solutionsResolve technical blockers by collaborating with engineering and sharing customer insightsRepresent Microsoft in customer forums and technical communities through thought leadership\n\nQualifications\n\nRequired/minimum qualifications\n\nBachelor's Degree in Computer Science, Information Technology, Engineering or related field AND 6+ years technical pre-sales or technical consulting experience OR equivalent experience.\nHands-on experience designing production-grade, intelligent applications on Azure using AI Foundry, cloud-native app platform services (AKS, Container Apps, App Service), with the ability to guide customers through end-to-end AI application modernization decisions.\n\nAdditional Or Preferred Qualifications\n\nHands‑on experience building and shipping generative AI workloads on Azure, including RAG architectures, multi-agent orchestration, LLM engineering fundamentals (chunking/embedding strategy, hybrid search, reranking, eval-driven development), and integration with Azure AI Search.\nSolid understanding of end‑to‑end AI application architecture concepts, including model selection, prompt engineering, tool calling and MCP (Model Context Protocol), content safety, observability, and responsible AI practices.\nExperience building and deploying cloud-native applications across the Azure app platform—AKS, Container Apps, App Service, and Functions—and integrating AI capabilities via API Management, Copilot Studio, and GitHub Copilot to support intelligent, enterprise-scale workloads.\nAbility to guide customers through application and AI platform modernization decisions, balancing architecture, governance, cost, and performance considerations to enable AI‑ready and enterprise‑scale outcomes.\n\nDigital Solution Engineering IC5 - The typical base pay range for this role across Canada is CAD $128,000 - CAD $222,400 per year.\n\nFind Additional Pay Information Here\n\nhttps://careers.microsoft.com/v2/global/en/canada-pay-information.html\n\nDigital Solution Engineering IC5 - L'échelle salariale de base typique pour ce rôle dans l'ensemble du Canada est de 128,000 $ CAD à 222,400 $ CAD par année.\n\nPour plus d'information au sujet de la rémunération, veuillez cliquer ici:\n\nhttps://careers.microsoft.com/v2/global/en/canada-pay-information.html\n\nCe poste sera ouvert pendant au moins cinq jours et les candidatures seront acceptées de façon continue jusqu’à ce que le poste soit pourvu.\n\nThis position will be open for a minimum of 5 days, with applications accepted on an ongoing basis until the position is filled.\n\nMicrosoft est un employeur offrant l’égalité d’accès à l’emploi. Tous les candidats qualifiés seront pris en considération pour l’emploi, sans égard à l’âge, à l’ascendance, à la citoyenneté, à la couleur, aux congés médicaux ou familiaux, à l’identité ou à l’expression de genre, aux renseignements génétiques, à l’état d’immigration, à l’état matrimonial, à l’état de santé, à l’origine nationale, à un éventuel handicap physique ou mental, à l’affiliation politique, au statut de vétéran protégé ou au statut militaire, à la race, à l’ethnie, à la religion, au sexe (y compris la grossesse), à l’orientation sexuelle ou à toute autre caractéristique protégée par les lois, ordonnances et règlements locaux applicables. Si vous avez besoin d’aide avec des accommodements religieux et/ou d’un accommodement raisonnable en raison d’un handicap pendant le processus de candidature, apprenez-en plus sur la demande d’accommodement.\n\nMicrosoft is an equal opportunity employer. All qualified applicants will receive consideration for employment without regard to age, ancestry, citizenship, color, family or medical care leave, gender identity or expression, genetic information, immigration status, marital status, medical condition, national origin, physical or mental disability, political affiliation, protected veteran or military status, race, ethnicity, religion, sex (including pregnancy), sexual orientation, or any other characteristic protected by applicable local laws, regulations and ordinances. If you need assistance with religious accommodations and/or a reasonable accommodation due to a disability during the application process, read more about requesting accommodations.`,
     mockData: {
-      companyUrl: "apex-logistics-careers.net",
-      isHttps: false,
-      domainAge: "New",
-      hasNordVpnAlert: true,
-      linkedinBadge: "undefined",
-      linkedinEmployees: "none",
-      hasEmployeeActivity: false,
-      linkedinPageCreation: "recent",
-      externalFootprint: "missing",
-      hasNoFrictionInterview: true,
-      hasFinancialRequests: true,
-      hasGenericEmails: true,
-      hasUnrealisticPay: true,
-      hasEasyApplyRedirect: false,
-      suspiciousKeywordsFound: ["Telegram", "check", "@ApexLogisticsHiring", "iMac", "equipment"],
-      evidenceNotes: "Newly registered spoof domain. No valid HTTPS. No LinkedIn employee presence. Uses @ApexLogisticsHiring on Telegram. Instructs candidates to deposit a check and coordinate payments with their private vendor.",
-      scamIndicators: [
-        "download the Telegram App on your phone",
-        "send you a digital check to deposit on your bank app",
-        "purchase your Apple iMac, scanners, and time-tracker software"
-      ]
-    }
-  },
-  {
-    id: "scam-gmail-assistant",
-    name: "7. Google-Email & WhatsApp Interview scam",
-    company: "EcoSmart Solutions",
-    tier: "Scam",
-    summary: "Common phishing decoy recruiting virtual administrative interns using free Gmail contacts and conducting rapid job offers over WhatsApp.",
-    description: `EcoSmart Solutions is expanding! We are hiring a Remote Administrative Assistant Intern.
-No prior experience is necessary, as we value an open-mind above everything else.
-Salary: $35/hour. 15-20 hours a week.
-General responsibilities include sorting email inboxes, booking zoom invites, and ordering online office gift cards.
-Please email your resume directly to ecosmartsolutionsHR@gmail.com. We do not use portals to prevent administrative lag. If selected, our HR panel will message you on WhatsApp to finalize the paper contract within 2 hours.`,
-    mockData: {
-      companyUrl: "undefined",
-      isHttps: "undefined",
-      domainAge: "Undefined",
-      hasNordVpnAlert: "undefined",
-      linkedinBadge: "unverified",
-      linkedinEmployees: "none",
-      hasEmployeeActivity: false,
-      linkedinPageCreation: "recent",
-      externalFootprint: "missing",
-      hasNoFrictionInterview: true,
-      hasFinancialRequests: false,
-      hasGenericEmails: true,
-      hasUnrealisticPay: true,
-      hasEasyApplyRedirect: false,
-      suspiciousKeywordsFound: ["WhatsApp", "gmail.com", "gift cards"],
-      evidenceNotes: "EcoSmart Solutions does not have an active corporate domain. Uses ecosmartsolutionsHR@gmail.com for resume collection. Rapid onboarding over WhatsApp message streams without professional vetting checks.",
-      scamIndicators: [
-        "ecosmartsolutionsHR@gmail.com",
-        "our HR panel will message you on WhatsApp to finalize the paper contract"
-      ]
-    }
-  },
-  {
-    id: "scam-credit-score",
-    name: "8. Paid Background Screen Phishing hook",
-    company: "Weston Financial Associates (Spoof)",
-    tier: "Scam",
-    summary: "Phishing vector disguised as an immediate administrative assistant, baiting candidates into a phishing link to pay for background reports.",
-    description: `Weston Financial Associates is in urgent search of an Executive Virtual Assistant.
-Work remote. Responsibilities: scheduling, file indexing, answering telephone loops, and draft reviews.
-Salary: $38 - $45/hour.
-Requirements: Must have strong organization records and pass a clean criminal record background check.
-IMPORTANT Application Guideline: We require all virtual applicants to pre-validate their background eligibility using our authorized vendor site (nationalprofilecheckers.org). Note there is an organic $29 fee for immediate verification generation. Candidates will be refunded on their first payment sheet. Do not submit your resume to us before loading the proof receipt.`,
-    mockData: {
-      companyUrl: "nationalprofilecheckers.org",
+      companyUrl: "microsoft.com",
+      linkedinUrl: "https://www.linkedin.com/company/microsoft",
       isHttps: true,
-      domainAge: "New",
-      hasNordVpnAlert: true,
-      linkedinBadge: "unverified",
-      linkedinEmployees: "none",
-      hasEmployeeActivity: false,
-      linkedinPageCreation: "recent",
-      externalFootprint: "flagged",
+      domainAge: "old",
+      hasNordVpnAlert: false,
+      linkedinBadge: "verified",
+      linkedinEmployees: "large",
+      hasEmployeeActivity: "organic",
+      linkedinPageCreation: "historical",
+      externalFootprint: "found",
+      flaggedSourceUrls: [],
       hasNoFrictionInterview: false,
-      hasFinancialRequests: true,
+      hasFinancialRequests: false,
       hasGenericEmails: false,
-      hasUnrealisticPay: true,
-      hasEasyApplyRedirect: true,
-      suspiciousKeywordsFound: ["profiles check", "$29", "background"],
-      evidenceNotes: "Domain nationalprofilecheckers.org registered 18 days ago. Verified on multiple scam databases for phishing background fees. Weston Financial has zero profiles on Crunchybase or Glassdoor.",
-      scamIndicators: [
-        "pre-validate their background eligibility using our authorized vendor site",
-        "nationalprofilecheckers.org",
-        "organic $29 fee for immediate verification"
-      ]
-    }
-  },
-  {
-    id: "scam-skype-typing",
-    name: "9. Skype Chat typing scam",
-    company: "AstraZeneca Labs (Lookalike Spoof)",
-    tier: "Scam",
-    summary: "Impersonation fraud of a global pharmaceutical firm. Relies on Skype text sessions and promises upfront starting iMac gear via paper checks.",
-    description: `AstraZeneca Pharmaceuticals has urgent openings for remote Typing Operators.
-Duties: Type copy manuscripts on Microsoft Word and convert raw data files to PDF documents.
-Earn up to $3,500 monthly. Flexible schedule, work full time or part time.
-To join the AstraZeneca onboarding team, you must add our lead recruiting administrator on Skype. Skype ID: live:.cid.astrazeneca_hiring_office. Send message: 'HIRE ME'.
-Following the simple text chat interview, we will ship your office equipment. If you do not have an active secure device, we will send an electronic check to buy software licenses from our accredited vendor.`,
-    mockData: {
-      companyUrl: "astrazeneca-careers-portal.co",
-      isHttps: false,
-      domainAge: "New",
-      hasNordVpnAlert: true,
-      linkedinBadge: "unverified",
-      linkedinEmployees: "none",
-      hasEmployeeActivity: false,
-      linkedinPageCreation: "recent",
-      externalFootprint: "flagged",
-      hasNoFrictionInterview: true,
-      hasFinancialRequests: true,
-      hasGenericEmails: true,
       hasUnrealisticPay: false,
       hasEasyApplyRedirect: false,
-      suspiciousKeywordsFound: ["Skype", "check", "equipment", "AstraZeneca Labs"],
-      evidenceNotes: "Lookalike domain registered last week to copy Astrazeneca. Generates fake electronic software checks. Pure typing data entry text chat recruit via Skype with zero biometric video safety verification.",
-      scamIndicators: [
-        "Skype ID: live:.cid.astrazeneca_hiring_office",
-        "send an electronic check to buy software licenses"
-      ]
+      suspiciousKeywordsFound: [],
+      evidenceNotes: "Microsoft is a multinational tech corporation founded in 1975. Verified LinkedIn presence with tens of thousands of active workers. Thoroughly legitimate standard posting.",
+      scamIndicators: []
     }
   },
   {
-    id: "scam-giftcard-buyer",
-    name: "10. Secret Shopper / Gift Card buyer phish",
-    company: "Target Retail Services (Spoof)",
-    tier: "Scam",
-    summary: "Data-harvesting phish targeted at teenagers and students, recruiting 'Secret Shoppers' to purchase Apple gift cards to check network speeds.",
-    description: `ATTENTION STUDENTS! Earn extra spending money in your free time!
-Target Retail Services is hiring Seasonal Mystery Evaluators.
-Earn $350 per assignment. Complete 2 assignments weekly!
-Assignment Protocol:
-- Navigate to local retail stores (Macy's, Apple, Walmart).
-- Evaluate clerk hospitality records, safety conditions, and register times.
-- Purchase designated $100 Apple/Google Play Gift Cards at the checkout to test POS electronic terminal speeds.
-- Send clear scratch-off coupon barcode photos to our HR review handle (targetmysteryops@outlook.com) to confirm completion.
-We will provide immediate credit refunds plus your mystery reward within 24 hours of barcode submission!`,
+    id: "job3-hunter-bond",
+    name: "3. Hunter Bond - Software Engineer",
+    company: "Hunter Bond",
+    role: "Software Engineer - Up to $200,000 CAD + Bonus + Package",
+    url: "https://hunterbond.com/",
+    tier: "Legitimate",
+    summary: "Standard third-party recruiting firm posting. Uses direct recruiter email approach but points to a real corporate domain.",
+    description: `About the job\n💻 Software Developer (Language Agnostic)\n\n📍 Montreal (Hybrid)\n💵 Up to $200,000 CAD + Bonus + Full Package\n\n\n🚀 The Opportunity\n\nJoin a world-class, technology-driven firm as a Software Engineer, building the systems that power high-performance trading, research, and large-scale back testing.\nThis is a hands-on, high-impact role where your work directly shapes real-time decision-making, system performance, and automation across the trading lifecycle. You’ll collaborate with top-tier engineers and quants in a fast-moving, engineering-first environment.\n\n\n🔧 What You’ll Do\n\nDesign and build scalable, production-grade systems for real-time trading and analytics\nDrive automation to improve speed, reliability, and efficiency across workflows\nPartner with engineers, quants, and stakeholders to deliver high-impact solutions\n\n\n🌟 Why This Role Stands Out\n\n📈 Accelerated Growth – Thrive in a meritocratic, high-performance culture\n🧪 Cutting-Edge Stack – Work with modern technologies and advanced infrastructure\n💰 Strong Compensation – Highly competitive salary with performance-driven bonuses\n🤝 Elite Team – Collaborate in a flat structure with exceptional talent\n\n\n✅ What You Bring\n\n🎓 Degree in Computer Science, Engineering, or a related STEM field\n💻 1+ years of experience in Python, Java, C++, or similar languages\n⚡ A problem-solving mindset and the ability to excel in fast\n\n\nReady to take your software engineering career to the next level in a cutting-edge environment?\n\n\nApply now or reach out to me directly: obloom@hunterbond.com`,
     mockData: {
-      companyUrl: "targetretailjobs.com",
-      isHttps: false,
-      domainAge: "New",
-      hasNordVpnAlert: true,
-      linkedinBadge: "undefined",
-      linkedinEmployees: "none",
-      hasEmployeeActivity: false,
-      linkedinPageCreation: "recent",
-      externalFootprint: "flagged",
-      hasNoFrictionInterview: true,
-      hasFinancialRequests: true,
-      hasGenericEmails: true,
-      hasUnrealisticPay: true,
+      companyUrl: "hunterbond.com",
+      linkedinUrl: "https://www.linkedin.com/company/hunter-bond",
+      isHttps: true,
+      domainAge: "old",
+      hasNordVpnAlert: false,
+      linkedinBadge: "verified",
+      linkedinEmployees: "medium",
+      hasEmployeeActivity: "organic",
+      linkedinPageCreation: "historical",
+      externalFootprint: "found",
+      flaggedSourceUrls: [],
+      hasNoFrictionInterview: false,
+      hasFinancialRequests: false,
+      hasGenericEmails: false,
+      hasUnrealisticPay: false,
       hasEasyApplyRedirect: false,
-      suspiciousKeywordsFound: ["gift cards", "scratch-off", "outlook.com"],
-      evidenceNotes: "Scam domain registered to harvest credit credentials. Outlook.com handle. Mystery shop scams target candidates by asking them to purchase gift cards and email scratch-off barcodes to anonymous profiles.",
-      scamIndicators: [
-        "targetmysteryops@outlook.com",
-        "Purchase designated $100 Apple/Google Play Gift Cards",
-        "Send clear scratch-off coupon barcode photos"
-      ]
+      suspiciousKeywordsFound: [],
+      evidenceNotes: "Hunter Bond is an established recruitment firm. The job description includes a direct email contact for a recruiter with the firm's verified domain (@hunterbond.com).",
+      scamIndicators: []
     }
   }
 ];

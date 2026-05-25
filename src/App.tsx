@@ -24,7 +24,8 @@ import {
   Award,
   Link as LinkIcon,
   PlayCircle,
-  Briefcase
+  Briefcase,
+  ChevronLeft
 } from "lucide-react";
 import { JobAnalysisData, GroundingSource, ScoreReport } from "./types";
 import { computeTrustScore } from "./utils/scoring";
@@ -35,6 +36,7 @@ import RealUseCases from "./pages/RealUseCases";
 
 export default function App() {
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
 
   // --- States ---
@@ -56,6 +58,7 @@ export default function App() {
 
   // Raw Inputs (Step 1)
   const [companyName, setCompanyName] = useState<string>("");
+  const [jobTitle, setJobTitle] = useState<string>("");
   const [jobDescription, setJobDescription] = useState<string>("");
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
@@ -67,13 +70,14 @@ export default function App() {
   const [reviewedData, setReviewedData] = useState<JobAnalysisData>({
     companyUrl: "",
     isHttps: "undefined",
-    domainAge: "Undefined",
+    domainAge: "undefined",
     hasNordVpnAlert: "undefined",
     linkedinBadge: "undefined",
     linkedinEmployees: "undefined",
     hasEmployeeActivity: "undefined",
     linkedinPageCreation: "undefined",
     externalFootprint: "undefined",
+    flaggedSourceUrls: [],
     hasNoFrictionInterview: "undefined",
     hasFinancialRequests: "undefined",
     hasGenericEmails: "undefined",
@@ -87,6 +91,9 @@ export default function App() {
 
   // Scoring output results (Step 4)
   const [scoreReport, setScoreReport] = useState<ScoreReport | null>(null);
+
+  // Active Sandbox Preset for Instant Demoing
+  const [activePresetMock, setActivePresetMock] = useState<any>(null);
 
   // Cycling status messages during AI staging analysis
   const statusPhrases = [
@@ -102,6 +109,15 @@ export default function App() {
   useEffect(() => {
     validateActiveConfiguration(true);
   }, []);
+
+  // Clear preset mock if navigated to primary Workspace via browser controls
+  useEffect(() => {
+    if (location.pathname === "/") {
+      if (activePresetMock) {
+        handleReset();
+      }
+    }
+  }, [location.pathname]);
 
   // Set up cycling text while analyzing
   useEffect(() => {
@@ -189,17 +205,32 @@ export default function App() {
 
   // Analyze listings API request
   async function startAdAnalysis() {
-    if (!companyName.trim() || !jobDescription.trim()) {
-      setAnalysisError("Stated company name and job block cannot be empty.");
+    if (!companyName.trim() || !jobTitle.trim() || !jobDescription.trim()) {
+      setAnalysisError("Stated company name, job title, and job block cannot be empty.");
       return;
     }
 
     setAnalysisError(null);
+    setScoreReport(null); // Clear previous score if re-analyzing
     setIsAnalyzing(true);
+
+    // If sandbox preset is active, skip API processing securely to demonstrate UI workflow immediately
+    if (activePresetMock) {
+      setReviewedData({ ...activePresetMock.mockData });
+      setGroundingSources([
+        { title: `${activePresetMock.company} - Verified Enterprise Ground Record`, uri: !activePresetMock.mockData.companyUrl ? "https://google.com" : `https://${activePresetMock.mockData.companyUrl}` },
+        { title: "Independent Glassdoor Directory Reference", uri: "https://glassdoor.com" },
+        { title: "Opencorporates Legal Business Registrar", uri: "https://opencorporates.com" }
+      ]);
+      setCurrentStep(3);
+      setIsAnalyzing(false);
+      return;
+    }
 
     try {
       const payload = {
         companyName: companyName.trim(),
+        jobTitle: jobTitle.trim(),
         jobDescription: jobDescription.trim(),
         customApiKey: useCustomKey ? customApiKey : null
       };
@@ -222,9 +253,10 @@ export default function App() {
 
       // Populate stage data (Step 3)
       setReviewedData({
-        companyUrl: res.data.companyUrl || "undefined",
+        companyUrl: res.data.companyUrl === "undefined" ? "" : (res.data.companyUrl || ""),
+        linkedinUrl: res.data.linkedinUrl === "undefined" ? "" : (res.data.linkedinUrl || ""),
         isHttps: res.data.isHttps !== undefined ? res.data.isHttps : "undefined",
-        domainAge: res.data.domainAge || "Undefined",
+        domainAge: res.data.domainAge || "undefined",
         hasNordVpnAlert: res.data.hasNordVpnAlert !== undefined ? res.data.hasNordVpnAlert : "undefined",
         linkedinBadge: res.data.linkedinBadge || "undefined",
         linkedinEmployees: res.data.linkedinEmployees || "undefined",
@@ -236,6 +268,7 @@ export default function App() {
         hasGenericEmails: res.data.hasGenericEmails !== undefined ? res.data.hasGenericEmails : "undefined",
         hasUnrealisticPay: res.data.hasUnrealisticPay !== undefined ? res.data.hasUnrealisticPay : "undefined",
         hasEasyApplyRedirect: res.data.hasEasyApplyRedirect !== undefined ? res.data.hasEasyApplyRedirect : "undefined",
+        flaggedSourceUrls: res.data.flaggedSourceUrls || [],
         suspiciousKeywordsFound: res.data.suspiciousKeywordsFound || [],
         evidenceNotes: res.data.evidenceNotes || "",
         scamIndicators: res.data.scamIndicators || []
@@ -261,37 +294,39 @@ export default function App() {
   // Reset to original Step 1 form
   function handleReset() {
     setCompanyName("");
+    setJobTitle("");
     setJobDescription("");
     setScoreReport(null);
     setGroundingSources([]);
     setAnalysisError(null);
+    setActivePresetMock(null);
     setCurrentStep(1);
   }
 
   // Load predefined preset test case to form inputs
-  function loadPresetToForm(presetId: string, directScore: boolean) {
+  function loadPresetToForm(presetId: string) {
     const preset = testCases.find(c => c.id === presetId);
     if (!preset) return;
 
+    // Clear previous reports
+    setScoreReport(null);
+    setAnalysisError(null);
+    setReviewedData(null);
+    
     setCompanyName(preset.company);
+    setJobTitle(preset.role);
     setJobDescription(preset.description);
 
-    if (directScore) {
-      setReviewedData({ ...preset.mockData });
-      setGroundingSources([
-        { title: `${preset.company} - Verified Enterprise Ground Record`, uri: preset.mockData.companyUrl === "undefined" ? "https://google.com" : `https://${preset.mockData.companyUrl}` },
-        { title: "Independent Glassdoor Directory Reference", uri: "https://glassdoor.com" },
-        { title: "Opencorporates Legal Business Registrar", uri: "https://opencorporates.com" }
-      ]);
-      setCurrentStep(3); // Push straight to human-in-the-loop review dashboard
-    } else {
-      setCurrentStep(1);
+    setActivePresetMock(preset);
+    setCurrentStep(1);
+
+    if (currentPath !== "/cases") {
+      navigate("/");
     }
-    
-    navigate("/");
   }
 
   const isConfigValid = validationSuccess === true || (isEnvKeyAvailable && !useCustomKey);
+  const isInputUnlocked = isConfigValid || activePresetMock !== null;
 
   return (
     <div className="min-h-screen bg-zinc-50 font-sans text-zinc-900 flex flex-col antialiased">
@@ -300,18 +335,22 @@ export default function App() {
       <header className="bg-white border-b border-zinc-200 sticky top-0 z-30 shadow-xs" id="main-header">
         <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="bg-indigo-600 text-white p-2 rounded-lg" id="app-logo-bg">
-              <Shield className="w-6 h-6" id="app-logo-icon" />
+            <div className="bg-indigo-600 text-white font-black text-xs px-2 py-1 rounded" id="app-logo-bg">
+              MVP
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-zinc-900" id="main-title">TrueJobPost Web App <span className="text-sm font-semibold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full ml-1" id="mvp-label">MVP</span></h1>
-              <p className="text-xs text-zinc-500" id="dev-credit">Powered by <span className="font-semibold text-zinc-600" id="dev-team">FairHire Labs</span> • Human-in-the-Loop Engine</p>
+              <h1 className="text-xl font-bold tracking-tight text-zinc-900" id="main-title">True Job Post</h1>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 bg-zinc-100 p-1 rounded-lg self-start sm:self-center" role="navigation" id="navigation-tabs">
             <Link 
               to="/"
+              onClick={() => {
+                if (activePresetMock) {
+                  handleReset();
+                }
+              }}
               className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-150 flex items-center gap-1.5 ${currentPath === "/" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-600 hover:text-zinc-900"}`}
             >
               <Briefcase className="w-4 h-4" />
@@ -352,23 +391,20 @@ export default function App() {
         {!isConfigValid && currentPath !== "/settings" && (
           <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-2xs" id="alert-no-key">
             <div className="flex gap-3">
-              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5 md:mt-0" />
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5 md:mt-0"/>
               <div>
                 <h2 className="text-sm font-semibold text-amber-950">Active API Keys Unvalidated</h2>
                 <p className="text-xs text-amber-800 mt-0.5">Please validate your Google Gemini API configuration keys in settings before launching automated research tasks.</p>
               </div>
             </div>
-            <Link
-              to="/settings"
-              className="text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg transition-colors cursor-pointer shrink-0 inline-block"
-            >
+            <Link to="/settings" className="text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg transition-colors cursor-pointer shrink-0 inline-block">
               Configure Configuration Now
             </Link>
           </div>
         )}
 
-        <Routes>
-          <Route path="/" element={
+        {/* Workspace View for both exact path and RealUseCases with selected preset */}
+        { (currentPath === '/' || (currentPath === '/cases' && activePresetMock)) && (
             <motion.div
               key="workspace"
               initial={{ opacity: 0, y: 10 }}
@@ -376,6 +412,20 @@ export default function App() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
+              {currentPath === '/cases' && (
+                <div className="mb-6 bg-white border border-zinc-200 rounded-xl p-4 flex items-center justify-between shadow-2xs">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest leading-none mb-1">Testing Mode</span>
+                    <span className="text-sm font-semibold text-zinc-900">Sandbox Preset Loaded</span>
+                  </div>
+                  <button 
+                    onClick={() => { setActivePresetMock(null); handleReset(); navigate("/cases"); }} 
+                    className="flex items-center gap-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-colors px-3 py-2 rounded shadow-sm cursor-pointer"
+                  >
+                    <ChevronLeft className="w-4 h-4" /> Back to Case List
+                  </button>
+                </div>
+              )}
 
               
               {/* Stepper Steps UI Process Visual */}
@@ -384,7 +434,13 @@ export default function App() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4" id="workflow-steps-grid">
                   
                   {/* Step 1 Item */}
-                  <div className={`p-3 rounded-lg border flex gap-3 transition-colors ${currentStep === 1 ? "bg-indigo-50 border-indigo-200" : "bg-zinc-50 border-zinc-200"}`} id="step-info-1">
+                  <div 
+                    onClick={() => {
+                       if (!isAnalyzing && (currentStep === 3 || currentStep === 4)) {
+                         setCurrentStep(1);
+                       }
+                    }}
+                    className={`p-3 rounded-lg border flex gap-3 transition-colors ${currentStep === 1 ? "bg-indigo-50 border-indigo-200" : "bg-zinc-50 border-zinc-200"} ${(!isAnalyzing && (currentStep === 3 || currentStep === 4)) ? "cursor-pointer hover:bg-zinc-100" : ""}`} id="step-info-1">
                     <span className={`w-6 h-6 shrink-0 rounded-full font-bold text-xs flex items-center justify-center ${currentStep === 1 ? "bg-indigo-600 text-white text-medium" : "bg-zinc-300 text-zinc-700"}`}>1</span>
                     <div>
                       <h4 className="text-xs font-bold text-zinc-900">Input Data Collection</h4>
@@ -402,7 +458,13 @@ export default function App() {
                   </div>
 
                   {/* Step 3 Item */}
-                  <div className={`p-3 rounded-lg border flex gap-3 transition-colors ${currentStep === 3 ? "bg-indigo-50 border-indigo-200" : "bg-zinc-50 border-zinc-200"}`} id="step-info-3">
+                  <div 
+                    onClick={() => {
+                       if (!isAnalyzing && reviewedData && currentStep !== 3) {
+                         setCurrentStep(3);
+                       }
+                    }}
+                    className={`p-3 rounded-lg border flex gap-3 transition-colors ${currentStep === 3 ? "bg-indigo-50 border-indigo-200" : "bg-zinc-50 border-zinc-200"} ${(!isAnalyzing && reviewedData && currentStep !== 3) ? "cursor-pointer hover:bg-zinc-100" : ""}`} id="step-info-3">
                     <span className={`w-6 h-6 shrink-0 rounded-full font-bold text-xs flex items-center justify-center ${currentStep === 3 ? "bg-indigo-600 text-white text-medium" : "bg-zinc-300 text-zinc-700"}`}>3</span>
                     <div>
                       <h4 className="text-xs font-bold text-zinc-900">Human-in-the-Loop Review</h4>
@@ -411,7 +473,13 @@ export default function App() {
                   </div>
 
                   {/* Step 4 Item */}
-                  <div className={`p-3 rounded-lg border flex gap-3 transition-colors ${currentStep === 4 ? "bg-emerald-50 border-emerald-200" : "bg-zinc-50 border-zinc-200"}`} id="step-info-4">
+                  <div 
+                    onClick={() => {
+                       if (!isAnalyzing && scoreReport && currentStep !== 4) {
+                         setCurrentStep(4);
+                       }
+                    }}
+                    className={`p-3 rounded-lg border flex gap-3 transition-colors ${currentStep === 4 ? "bg-emerald-50 border-emerald-200" : "bg-zinc-50 border-zinc-200"} ${(!isAnalyzing && scoreReport && currentStep !== 4) ? "cursor-pointer hover:bg-zinc-100" : ""}`} id="step-info-4">
                     <span className={`w-6 h-6 shrink-0 rounded-full font-bold text-xs flex items-center justify-center ${currentStep === 4 ? "bg-emerald-600 text-white" : "bg-zinc-300 text-zinc-700"}`}>4</span>
                     <div>
                       <h4 className="text-xs font-bold text-zinc-900">Deterministic Score Calculation</h4>
@@ -427,16 +495,9 @@ export default function App() {
                 
                 {/* STEP 1: Collection Interface Input Screen */}
                 {currentStep === 1 && (
-                  <motion.div
-                    key="step1"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="grid grid-cols-1 lg:grid-cols-3 gap-8"
-                    id="step-1-container"
-                  >
+                  <motion.div key="step1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 lg:grid-cols-3 gap-8" id="step-1-container">
                     
-                    {/* Left explanation card */}
+                    {/* Left explanation card 
                     <div className="lg:col-span-1 bg-white border border-zinc-200 rounded-xl p-6 shadow-2xs self-start" id="intro-card">
                       <h3 className="text-zinc-900 font-bold text-lg mb-2" id="intro-card-title">Say Goodbye to Recruitment Fraud</h3>
                       <p className="text-sm text-zinc-600 leading-relaxed" id="intro-card-desc">
@@ -447,19 +508,19 @@ export default function App() {
                         <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider" id="red-flags-heading">Scam Markers Checked Automatically</h4>
                         
                         <div className="flex gap-2 text-xs text-zinc-700" id="flag-check-1">
-                          <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                          <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"/>
                           <span><strong>Website Age Status:</strong> Newly registered domains vs historical corporate handles.</span>
                         </div>
                         <div className="flex gap-2 text-xs text-zinc-700" id="flag-check-2">
-                          <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                          <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"/>
                           <span><strong>Chat-Only Channels:</strong> Routing applications via Telegram, Signal, or Skype.</span>
                         </div>
                         <div className="flex gap-2 text-xs text-zinc-700" id="flag-check-3">
-                          <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                          <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"/>
                           <span><strong>Startup Gear Requests:</strong> Asking you to pay for startup laptop tech or files.</span>
                         </div>
                         <div className="flex gap-2 text-xs text-zinc-700" id="flag-check-4">
-                          <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                          <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"/>
                           <span><strong>Generic Free Emails:</strong> Contact handles routing to gmail/outlook accounts.</span>
                         </div>
                       </div>
@@ -470,6 +531,7 @@ export default function App() {
                         </span>
                       </div>
                     </div>
+                    */}
 
                     {/* Right input form card */}
                     <div className="lg:col-span-2 bg-white border border-zinc-200 rounded-xl p-6 shadow-2xs" id="input-form-card">
@@ -478,42 +540,33 @@ export default function App() {
 
                       {/* Company Name Box */}
                       <div className="mb-4" id="form-inp-company-container">
-                        <label 
-                          htmlFor="inp-company-name" 
-                          className="block text-sm font-semibold text-zinc-800 mb-1.5"
-                          id="label-company-name"
-                        >
+                        <label htmlFor="inp-company-name" className="block text-sm font-semibold text-zinc-800 mb-1.5" id="label-company-name">
                           Company Name <span className="text-red-500">*</span>
                         </label>
-                        <input
-                          id="inp-company-name"
-                          type="text"
-                          placeholder="e.g. Stripe, TechCorp, FairHire Labs"
-                          disabled={!isConfigValid || isAnalyzing}
-                          value={companyName}
-                          onChange={(e) => setCompanyName(e.target.value)}
-                          className={`w-full p-3 rounded-lg border text-sm font-medium transition-all focus:ring-2 focus:ring-indigo-600 focus:outline-none ${!isConfigValid ? "bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed" : "bg-white border-zinc-300 text-zinc-900"}`}
+                        <input id="inp-company-name" type="text" placeholder="e.g. Stripe, TechCorp, FairHire Labs" disabled={!isInputUnlocked || isAnalyzing} value={companyName} onChange={(e) => { setCompanyName(e.target.value); setActivePresetMock(null); }}
+                          className={`w-full p-3 rounded-lg border text-sm font-medium transition-all focus:ring-2 focus:ring-indigo-600 focus:outline-none ${!isInputUnlocked ? "bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed" : "bg-white border-zinc-300 text-zinc-900"}`}
+                          aria-required="true"
+                        />
+                      </div>
+
+                      {/* Job Title Box */}
+                      <div className="mb-4" id="form-inp-title-container">
+                        <label htmlFor="inp-job-title" className="block text-sm font-semibold text-zinc-800 mb-1.5" id="label-job-title">
+                          Job Title <span className="text-red-500">*</span>
+                        </label>
+                        <input id="inp-job-title" type="text" placeholder="e.g. Senior Software Engineer" disabled={!isInputUnlocked || isAnalyzing} value={jobTitle} onChange={(e) => { setJobTitle(e.target.value); setActivePresetMock(null); }}
+                          className={`w-full p-3 rounded-lg border text-sm font-medium transition-all focus:ring-2 focus:ring-indigo-600 focus:outline-none ${!isInputUnlocked ? "bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed" : "bg-white border-zinc-300 text-zinc-900"}`}
                           aria-required="true"
                         />
                       </div>
 
                       {/* Job Description Textarea */}
                       <div className="mb-6" id="form-inp-desc-container">
-                        <label 
-                          htmlFor="inp-job-desc" 
-                          className="block text-sm font-semibold text-zinc-800 mb-1.5"
-                          id="label-job-desc"
-                        >
+                        <label htmlFor="inp-job-desc" className="block text-sm font-semibold text-zinc-800 mb-1.5" id="label-job-desc">
                           Job Description pasted text block <span className="text-red-500">*</span>
                         </label>
-                        <textarea
-                          id="inp-job-desc"
-                          rows={10}
-                          placeholder="Paste the full job specification copy-pasted straight from LinkedIn, Indeed, ZipRecruiter or an email invite details block..."
-                          disabled={!isConfigValid || isAnalyzing}
-                          value={jobDescription}
-                          onChange={(e) => setJobDescription(e.target.value)}
-                          className={`w-full p-3 rounded-lg border text-sm font-normal leading-relaxed transition-all focus:ring-2 focus:ring-indigo-600 focus:outline-none ${!isConfigValid ? "bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed" : "bg-white border-zinc-300 text-zinc-900"}`}
+                        <textarea id="inp-job-desc" rows={10} placeholder="Paste the full job specification copy-pasted straight from LinkedIn, Indeed, ZipRecruiter or an email invite details block..." disabled={!isInputUnlocked || isAnalyzing} value={jobDescription} onChange={(e) => { setJobDescription(e.target.value); setActivePresetMock(null); }}
+                          className={`w-full p-3 rounded-lg border text-sm font-normal leading-relaxed transition-all focus:ring-2 focus:ring-indigo-600 focus:outline-none ${!isInputUnlocked ? "bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed" : "bg-white border-zinc-300 text-zinc-900"}`}
                           aria-required="true"
                         />
                       </div>
@@ -526,9 +579,13 @@ export default function App() {
                       )}
 
                       {/* Launch analysis button */}
-                      <div className="flex items-center justify-between gap-4 flex-wrap" id="submit-actions-panel">
-                        <div className="text-xs text-zinc-500" id="key-source-info">
-                          {isConfigValid ? (
+                      <div className="flex items-center justify-end gap-3 flex-wrap" id="submit-actions-panel">
+                        <div className="text-xs text-zinc-500 mr-auto" id="key-source-info">
+                          {activePresetMock ? (
+                            <span className="text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-md font-medium">
+                              ✓ Sandbox Preset Active (No API needed)
+                            </span>
+                          ) : isConfigValid ? (
                             <span className="text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-md font-medium" id="status-unlocked-badge">
                               ✓ Config Active ({useCustomKey ? "User Key" : "Server Secrets Key"})
                             </span>
@@ -539,12 +596,30 @@ export default function App() {
                           )}
                         </div>
 
+                        {scoreReport && (
+                          <button
+                            onClick={() => setCurrentStep(4)}
+                            className="px-6 py-3 bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-50 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm whitespace-nowrap"
+                          >
+                            To Final Score <ArrowRight className="w-4 h-4" />
+                          </button>
+                        )}
+                        
+                        {!scoreReport && reviewedData && (
+                          <button
+                            onClick={() => setCurrentStep(3)}
+                            className="px-6 py-3 bg-white border border-indigo-300 text-indigo-800 hover:bg-indigo-50 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm whitespace-nowrap"
+                          >
+                            To Review <ArrowRight className="w-4 h-4" />
+                          </button>
+                        )}
+
                         <button
                           id="analyze-listing-btn"
-                          disabled={!isConfigValid || isAnalyzing || !companyName.trim() || !jobDescription.trim()}
+                          disabled={!isInputUnlocked || isAnalyzing || !companyName.trim() || !jobTitle.trim() || !jobDescription.trim()}
                           onClick={startAdAnalysis}
-                          className={`px-6 py-3 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                            !isConfigValid || isAnalyzing || !companyName.trim() || !jobDescription.trim()
+                          className={`px-6 py-3 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+                            !isInputUnlocked || isAnalyzing || !companyName.trim() || !jobTitle.trim() || !jobDescription.trim()
                               ? "bg-zinc-200 text-zinc-500 border border-zinc-300 cursor-not-allowed"
                               : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
                           }`}
@@ -556,7 +631,7 @@ export default function App() {
                             </>
                           ) : (
                             <>
-                              <span>Analyze Listing</span>
+                              <span>{reviewedData ? "Re-Analyze Listing" : "Analyze Listing"}</span>
                               <ArrowRight className="w-4 h-4 font-bold" />
                             </>
                           )}
@@ -697,10 +772,10 @@ export default function App() {
                                 onChange={(e: any) => setReviewedData({ ...reviewedData, domainAge: e.target.value })}
                                 className="w-full p-2 bg-white border border-zinc-300 text-xs font-medium rounded-lg focus:ring-2 focus:ring-indigo-600 focus:outline-none cursor-pointer"
                               >
-                                <option value="Old">Old (Verified brand active 5+ years)</option>
-                                <option value="Mid">Mid (1 to 5 years footprint)</option>
-                                <option value="New">New (Registered under 1 year or look-alike) [Danger]</option>
-                                <option value="Undefined">Undefined / Cannot Confirm</option>
+                                <option value="old">Old (Verified brand active 5+ years)</option>
+                                <option value="mid">Mid (1 to 5 years footprint)</option>
+                                <option value="new">New (Registered under 1 year or look-alike) [Danger]</option>
+                                <option value="undefined">Undefined / Cannot Confirm</option>
                               </select>
                             </div>
 
@@ -743,6 +818,7 @@ export default function App() {
                               >
                                 <option value="verified">✓ Brand Account VERIFIED next to profile badge</option>
                                 <option value="unverified">⚠ UNVERIFIED employer profile on social platform</option>
+                                <option value="login_wall">Unable to Verify (Login Required)</option>
                                 <option value="undefined">Undefined / Profile Missing</option>
                               </select>
                             </div>
@@ -756,8 +832,9 @@ export default function App() {
                                 onChange={(e: any) => setReviewedData({ ...reviewedData, linkedinEmployees: e.target.value })}
                                 className="w-full p-2 bg-white border border-zinc-300 text-xs font-medium rounded-lg focus:ring-2 focus:ring-indigo-600 focus:outline-none cursor-pointer"
                               >
-                                <option value="many">Many registered profiles (5+ workers)</option>
-                                <option value="few">Few profiles linked (1 to 5 profiles total)</option>
+                                <option value="large">Large Enterprise (&gt;50 profiles linked)</option>
+                                <option value="medium">Medium Size (11 to 50 profiles)</option>
+                                <option value="boutique">Boutique (1 to 10 profiles linked)</option>
                                 <option value="none">☠ Red Flag: 0 employees linked [Shell Company]</option>
                                 <option value="undefined">Unchecked / Absent</option>
                               </select>
@@ -768,15 +845,14 @@ export default function App() {
                               <label htmlFor="inp-reviewed-activity" className="block text-xs font-bold text-zinc-700 mb-1">Associated Worker Profile Activity Depth</label>
                               <select
                                 id="inp-reviewed-activity"
-                                value={reviewedData.hasEmployeeActivity === "undefined" ? "undefined" : reviewedData.hasEmployeeActivity ? "true" : "false"}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setReviewedData({ ...reviewedData, hasEmployeeActivity: val === "undefined" ? "undefined" : val === "true" });
-                                }}
+                                value={reviewedData.hasEmployeeActivity}
+                                onChange={(e: any) => setReviewedData({ ...reviewedData, hasEmployeeActivity: e.target.value })}
                                 className="w-full p-2 bg-white border border-zinc-300 text-xs font-medium rounded-lg focus:ring-2 focus:ring-indigo-600 focus:outline-none cursor-pointer"
                               >
-                                <option value="true">✓ Organic activity tracks: &gt;100 connections, active feed logs</option>
-                                <option value="false">⚠ Inactive placeholders: &lt;100 connections, empty activities feed [Fake accounts]</option>
+                                <option value="organic">✓ High organic activity (connections, active feed)</option>
+                                <option value="low">⚠ Low profile / Emerging profiles</option>
+                                <option value="fake">☠ Inactive placeholders / Bots / Empty Feeds</option>
+                                <option value="login_wall">Unable to Verify (Login Required)</option>
                                 <option value="undefined">Unverified depth</option>
                               </select>
                             </div>
@@ -790,7 +866,7 @@ export default function App() {
                                 onChange={(e: any) => setReviewedData({ ...reviewedData, linkedinPageCreation: e.target.value })}
                                 className="w-full p-2 bg-white border border-zinc-300 text-xs font-medium rounded-lg focus:ring-2 focus:ring-indigo-600 focus:outline-none cursor-pointer"
                               >
-                                <option value="established">Established layout page (Years old active tenure)</option>
+                                <option value="historical">Historical layout page (Years old active tenure)</option>
                                 <option value="recent">☠ Red Flag: Page created very recently (3-4 weeks ago) [Dangerous]</option>
                                 <option value="undefined">Unverified year</option>
                               </select>
@@ -806,11 +882,23 @@ export default function App() {
                               onChange={(e: any) => setReviewedData({ ...reviewedData, externalFootprint: e.target.value })}
                               className="w-full p-2 bg-white border border-zinc-300 text-xs font-medium rounded-lg focus:ring-2 focus:ring-indigo-600 focus:outline-none cursor-pointer"
                             >
-                              <option value="robust">Robust (Verifiable legale registration details, Crunchbase rounds or active workers scores)</option>
+                              <option value="found">Found (Verifiable legale registration details, Crunchbase rounds or active workers scores)</option>
                               <option value="missing">⚠ Missing (No independent state company index listings present outside social media)</option>
                               <option value="flagged">☠ CRITICAL Red Flag: Company was reported/flagged on scam trackers/Glassdoor threads</option>
                               <option value="undefined">Unchecked / Pending check</option>
                             </select>
+                            {reviewedData.externalFootprint === 'flagged' && reviewedData.flaggedSourceUrls && reviewedData.flaggedSourceUrls.length > 0 && (
+                              <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <p className="text-[11px] font-bold text-red-800 mb-1">Flagged Directory Links Found:</p>
+                                <ul className="list-disc pl-4 space-y-1">
+                                  {reviewedData.flaggedSourceUrls.map((link, idx) => (
+                                    <li key={idx} className="text-[11px] text-red-700 break-all leading-tight">
+                                      <a href={link} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center">🔗 {link}</a>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -1055,14 +1143,24 @@ export default function App() {
                       </div>
 
                       {/* Recount button returning to begin */}
-                      <button
-                        id="score-reset-btn"
-                        onClick={handleReset}
-                        className="mt-6 w-full py-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-xs font-bold font-mono transition-colors tracking-wide flex items-center justify-center gap-2 cursor-pointer"
-                      >
-                        <RotateCcw className="w-4.5 h-4.5" />
-                        ANALYZE ANOTHER LISTING
-                      </button>
+                      <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                        <button
+                          onClick={() => setCurrentStep(3)}
+                          className="flex-1 py-3 bg-white border border-zinc-300 hover:bg-zinc-50 text-zinc-800 rounded-lg text-xs font-bold font-mono transition-colors tracking-wide flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                        >
+                          <ChevronLeft className="w-4.5 h-4.5" />
+                          BACK TO REVIEW
+                        </button>
+
+                        <button
+                          id="score-reset-btn"
+                          onClick={handleReset}
+                          className="flex-1 py-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-xs font-bold font-mono transition-colors tracking-wide flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                        >
+                          <RotateCcw className="w-4.5 h-4.5" />
+                          ANALYZE NEW
+                        </button>
+                      </div>
                     </div>
 
                     {/* Score Breakdown lists */}
@@ -1139,10 +1237,12 @@ export default function App() {
 
               </AnimatePresence>
             </motion.div>
-          } />
+        )}
 
+        <Routes>
+          <Route path="/" element={null} />
           <Route path="/tutorial" element={<Tutorial />} />
-          <Route path="/cases" element={<RealUseCases onLoadPreset={loadPresetToForm} />} />
+          <Route path="/cases" element={!activePresetMock ? <RealUseCases onLoadPreset={loadPresetToForm} /> : null} />
           <Route path="/settings" element={
             <SettingsPage 
               useCustomKey={useCustomKey}
@@ -1164,7 +1264,10 @@ export default function App() {
       {/* Footer information section */}
       <footer className="bg-white border-t border-zinc-200 py-6 text-center text-xs text-zinc-500 mt-auto" id="primary-footer">
         <div className="max-w-6xl w-full mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p id="copyright-para">© 2026 FairHire Labs. Created for recruitment safety audit loops under open licenses.</p>
+          <div className="flex flex-col sm:text-left gap-1">
+            <p className="font-semibold text-zinc-600" id="dev-credit">Powered by FairHire Labs • Human-in-the-Loop Engine</p>
+            <p id="copyright-para">© 2026 FairHire Labs. Created for recruitment safety audit loops under open licenses.</p>
+          </div>
           <div className="flex gap-4" id="footer-extra-links">
             <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 underline" id="google-external-footer-link">Google AI Studio</a>
             <span className="text-zinc-300">|</span>
