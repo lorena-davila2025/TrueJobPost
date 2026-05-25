@@ -19,6 +19,14 @@ To use the Human in the Loop Architecture, how even when asking the AI to perfor
 Research how to better imitate the steps I would take to research a company in a limited way, so the results from doing this are the same each time the search is executed.
 
 
+<img width="1198" height="879" alt="Screenshot 2026-05-24 at 11 38 50 PM" src="https://github.com/user-attachments/assets/7e7c517c-77e7-43ca-8559-174ca71ba206" />
+
+<img width="1280" height="839" alt="Screenshot 2026-05-24 at 11 40 40 PM" src="https://github.com/user-attachments/assets/f3888d95-2f54-484c-86db-fa4a5e28bfa1" />
+
+<img width="1297" height="888" alt="Screenshot 2026-05-24 at 11 40 50 PM" src="https://github.com/user-attachments/assets/7079adcb-b81e-4945-8083-c0b9a40afa3b" />
+
+<img width="1291" height="876" alt="Screenshot 2026-05-24 at 11 41 03 PM" src="https://github.com/user-attachments/assets/5ad6c890-0403-441b-a5cb-9e382f1b7513" />
+
 
 # Run and deploy your AI Studio app
 
